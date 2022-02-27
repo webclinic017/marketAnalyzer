@@ -1,3 +1,5 @@
 config.properties
 logs/
-exchages_index.json
+exchanges_index.json
+getData/__pycache__
+getData/cache.sqlite
