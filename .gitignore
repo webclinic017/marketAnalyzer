@@ -5,3 +5,4 @@ getData/__pycache__
 __pycache__
 **/__pycache__
 getData/cache.sqlite
+**/.ipynb_checkpoints
