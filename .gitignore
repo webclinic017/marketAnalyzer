@@ -2,4 +2,6 @@ config.properties
 logs/
 exchanges_index.json
 getData/__pycache__
+__pycache__
+**/__pycache__
 getData/cache.sqlite
