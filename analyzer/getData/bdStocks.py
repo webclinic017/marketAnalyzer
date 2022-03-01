@@ -42,7 +42,7 @@ mycursorStocks = mydbStocks.cursor()
 
 
 class getData:
-    def getPrizesByExchange(self, exchange: str, broker: str = None, bd: bool = False):
+    def getPrizesByExchange(self, exchange: str, broker: str = None, bd: bool = False,columnas=None):
 
         import os
         if PERFORMANCE:
@@ -60,15 +60,21 @@ class getData:
                 for file in files:
                     dataframe1 = self.__read_csv(file, directorio)
                     dataframe = pd.concat([dataframe, dataframe1], axis=0)
+            acceso="CSV"
+           
 
         else:
             sql = "select * from {}_precios;".format(exchange)
             dataframe=self.__read_bd(sql)
-          
-        writer.write("CSV access time "+str(timer.getTime()),
-                     log_dir_rendimiento)
-        writer.write("Object size "+str(sys.getsizeof(dataframe) /
+            acceso="BD"
+        if PERFORMANCE:
+            writer.write(acceso+" access time to get prizes "+str(timer.getTime()),
+                             log_dir_rendimiento)
+            writer.write("Object size (prizes data)"+str(sys.getsizeof(dataframe) /
                      1000000)+" MB", log_dir_rendimiento)
+        dataframe.rename_axis(index=["fecha"],inplace=True)
+        if columnas is not None:
+            return dataframe.loc[:,columnas]
         return dataframe
 
     def __read_csv(self, file, directorio):
@@ -91,8 +97,8 @@ class getData:
             return dataframe
         
 
-    def getFundamentalsByExchange(self, exchange: str, broker: str = None, bd: bool = False):
-
+    def getFundamentalsByExchange(self, exchange: str, broker: str = None, bd: bool = False,columnas=None):
+        
         import os
         if PERFORMANCE:
             timer = TimeMeasure()
@@ -108,15 +114,19 @@ class getData:
                 for file in files:
                     dataframe1 = self.__read_csv(file, directorio)
                     dataframe = pd.concat([dataframe, dataframe1], axis=0)
-
+                acceso="CSV"
         else:
             sql = "select * from {}_fundamental;".format(exchange)
           
             dataframe=self.__read_bd(sql)
-        writer.write("BD access time "+str(timer.getTime()),
-                     log_dir_rendimiento)
-        writer.write("Object size "+str(sys.getsizeof(dataframe) /
-                     1000000)+" MB", log_dir_rendimiento)
+            acceso="BD"
+        if PERFORMANCE:
+            writer.write(acceso+" access time to get stock fundamentals "+str(timer.getTime()),
+                         log_dir_rendimiento)
+            writer.write("Object size (fundamental data)"+str(sys.getsizeof(dataframe) /
+                         1000000)+" MB", log_dir_rendimiento)
+        if columnas is not None:
+            return dataframe.loc[:,columnas]
         return dataframe
     def getIndexPrizes(self,index):
         sql="select * from preciosIndices where indice=%s"
@@ -125,7 +135,37 @@ class getData:
         dataframe.columns = mycursorStocks.column_names
         dataframe.index = pd.to_datetime(dataframe["Date"])
         dataframe = dataframe.drop_duplicates().sort_index(level=0, ascending=True)
+        mydbStocks.commit()
+        dataframe.rename_axis(index=["fecha"],inplace=True)
         return dataframe
+        
+    def getSectors(self,exchange):
+        if PERFORMANCE:
+            timer = TimeMeasure()
+        sql="select stock,sector from sectors where exchange=%s"
+        mycursorStocks.execute(sql,(exchange,))
+        data=(mycursorStocks.fetchall())
+        mydbStocks.commit()
+        
+        if PERFORMANCE:
+            writer.write("BD access time to sectors "+str(timer.getTime()),
+                     log_dir_rendimiento)
+        return dict(data)
+    
+        
+    def getDescriptions(self,exchange):
+        if PERFORMANCE:
+            timer = TimeMeasure()
+        sql="select stock,description from descriptions where exchange=%s"
+        mycursorStocks.execute(sql,(exchange,))
+        data=(mycursorStocks.fetchall())
+        mydbStocks.commit()
+        
+        if PERFORMANCE:
+            writer.write("BD access time to sectors "+str(timer.getTime()),
+                     log_dir_rendimiento)
+        return dict(data)
+
         
 
 
