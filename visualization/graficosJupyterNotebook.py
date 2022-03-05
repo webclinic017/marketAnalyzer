@@ -24,10 +24,25 @@ from pydataset import data
 
 import transformations
 pct_change=transformations.pct_change 
+FIG_SIZE=(10,10)
 
+#morado es true
+def scatterWithCOlor(X,y,cero=None,pendiente=None):
+   
+        
+    fig=plt.figure(figsize=FIG_SIZE)
+    plt.scatter(X.iloc[:,0],X.iloc[:,1],c=y)
+    plt.xlabel(X.columns[0])
+    plt.ylabel(X.columns[1])
+    if cero is not None:
+        limite=plt.xlim()
+        inicio=[limite[0],(-cero-pendiente[0]*limite[0])/pendiente[1]]
+        fin=[limite[1],(-cero-pendiente[0]*limite[1])/pendiente[1]]
+        plt.plot([inicio[0],fin[0]],[inicio[1],fin[1]],"--")
+    
 def correlograma(corr,pcorr):
     import matplotlib.pyplot as plt
-    fig=plt.figure(figsize=(13,5))
+    fig=plt.figure(figsize=FIG_SIZE)
     plt.locator_params(axis="x", nbins=len(corr))
     plt.bar(range(len(corr)),corr)
     fig=plt.figure(figsize=(13,5))
@@ -38,7 +53,7 @@ def linearplot(dataframe1,title=None,scale=False,*args):
     
     #seaborn.pairplot(X)
    
-    fig=plt.figure(figsize=(13,5))
+    fig=plt.figure(figsize=FIG_SIZE)
     plt.grid(True)
     ax1 = fig.add_subplot(111, projection='rectilinear')  # Engadimos Axes á figura (contén os elementos do debuxo, queremos unha matrix [1,2])
     columna1=args[0]
@@ -49,10 +64,10 @@ def linearplot(dataframe1,title=None,scale=False,*args):
         dataframe=(dataframe-dataframe.mean())/dataframe.std()
     #dataframe.loc[:,args]=dataframe.loc[:,args].transform(lambda x:x.pct_change())
     ax1.xaxis.set_minor_formatter(mdates.DateFormatter('%m'))
-    ax1.plot(dataframe.index,dataframe[columna1],label=columna1)
+    ax1.plot(dataframe.index,dataframe[columna1],label=columna1, marker='o')
     if len(args)>1:
         for columna in args[1:]:
-            ax1.plot(dataframe.index,dataframe[columna],label=columna)
+            ax1.plot(dataframe.index,dataframe[columna],label=columna, marker='o')
    
     if title is not None:
         plt.title(title)
@@ -60,8 +75,24 @@ def linearplot(dataframe1,title=None,scale=False,*args):
     plt.show()
     
     
+    
+def plot_forecast(serie,dataframePred,title=None,scale=False,*args):
+    
+    fig=plt.figure(figsize=FIG_SIZE)
+    plt.grid(True)
+    ax1 = fig.add_subplot(111, projection='rectilinear')  # Engadimos Axes á figura (contén os elementos do debuxo, queremos unha matrix [1,2])
+    
+    ax1.xaxis.set_minor_formatter(mdates.DateFormatter('%m'))
+    
+    
+    ax1.plot(serie.index,serie,marker="o")
+    for k in ("mean","mean_ci_upper","mean_ci_lower"):
+        ax1.plot(dataframePred.index,dataframePred.loc[:,k],marker="o")
+    
+    
+    
 def linearplot_multiple_data(column,scale=False,title=None,*args):
-    fig=plt.figure(figsize=(13,5))
+    fig=plt.figure(figsize=FIG_SIZE)
     
     for dataframe1 in args:
         dataframe=dataframe1.copy()
@@ -78,7 +109,7 @@ def linearplot_multiple_data(column,scale=False,title=None,*args):
             dataframe=(dataframe-dataframe.mean())/dataframe.std()
         #dataframe[column]=dataframe[column].transform(lambda x:x.pct_change())
            
-        plt.plot(dataframe.index,dataframe[column],label=stock)
+        plt.plot(dataframe.index,dataframe[column],label=stock, marker='o')
         
    
     if title is not None:
@@ -130,3 +161,33 @@ def qqplot( modeloAjustado):
     for val in top3.index:
         ax.annotate(val,xy=(df1['theoretical_quantiles'].loc[val],df1['sorted_student_residuals'].loc[val]))
     plt.show()
+
+
+#graficos para metricas de clasificacion
+
+def plot_roc_curve(fpr, tpr, label=None):
+    fig=plt.figure(figsize=FIG_SIZE)
+    plt.plot(fpr, tpr, linewidth=2, label=label)
+    plt.plot([0, 1], [0, 1], 'k--')
+    plt.axis([0, 1, 0, 1])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    
+    
+def plot_precission_recall(precision, recall, label=None):
+    fig=plt.figure(figsize=FIG_SIZE)
+    plt.plot(recall,precision, linewidth=2, label=label)
+    plt.plot([0, 1], [0, 1], 'k--')
+    plt.axis([0, 1, 0, 1])
+    plt.xlabel('Recall')
+    plt.ylabel('Precision')
+    
+def plot_precision_recall_vs_threshold(precisions, recalls, thresholds):
+    fig=plt.figure(figsize=FIG_SIZE)
+    plt.plot(thresholds, precisions[:-1], "b--", label="Precision")
+    plt.plot(thresholds, recalls[:-1], "g-", label="Recall")
+    plt.xlabel("Threshold")
+    plt.legend(loc="upper left")
+    plt.ylim([0, 1])
+    plt.show()
+    
