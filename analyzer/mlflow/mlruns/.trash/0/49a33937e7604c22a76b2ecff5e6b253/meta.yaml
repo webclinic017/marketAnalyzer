@@ -1,0 +1,15 @@
+artifact_uri: file:///home/manuel/Documentos/marketAnanlyzer/analyzer/mlflow/mlruns/0/49a33937e7604c22a76b2ecff5e6b253/artifacts
+end_time: 1646585309024
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+name: ''
+run_id: 49a33937e7604c22a76b2ecff5e6b253
+run_uuid: 49a33937e7604c22a76b2ecff5e6b253
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1646585307649
+status: 3
+tags: []
+user_id: manuel

@@ -1,0 +1,15 @@
+artifact_uri: ./mlruns/1/4c41f600f580434eb21c3bfb36885208/artifacts
+end_time: 1646586652336
+entry_point_name: ''
+experiment_id: '1'
+lifecycle_stage: active
+name: ''
+run_id: 4c41f600f580434eb21c3bfb36885208
+run_uuid: 4c41f600f580434eb21c3bfb36885208
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1646586650135
+status: 3
+tags: []
+user_id: manuel

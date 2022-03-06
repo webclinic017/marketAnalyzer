@@ -1,0 +1,14 @@
+artifact_path: adaBoosting
+flavors:
+  python_function:
+    env: conda.yaml
+    loader_module: mlflow.sklearn
+    model_path: model.pkl
+    python_version: 3.9.5
+  sklearn:
+    pickled_model: model.pkl
+    serialization_format: cloudpickle
+    sklearn_version: 0.24.2
+model_uuid: 325ee49aa9a841a193735029f6f562d8
+run_id: c253a73182834ffd95480576b0782e11
+utc_time_created: '2022-03-06 17:00:35.941252'
