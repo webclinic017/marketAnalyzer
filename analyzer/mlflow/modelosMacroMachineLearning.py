@@ -41,8 +41,8 @@ logger = logging.getLogger(__name__)
 SCALE= True if config.get('Entrenamiento', 'scale')=="True" else False
 
 if __name__ == "__main__":
-    exchange="XETRA"
-    indiceName="dax30"
+    exchange="US"
+    indiceName="sp500"
     getsectors=True
     getdescriptions=False
     columnas=["netIncome","totalRevenue","stock"]
@@ -86,7 +86,8 @@ if __name__ == "__main__":
                                     shuffle      = False
                                 )
     modelos=["gradientBoosting","adaBoosting","randomForest","decisionTree","svm","logisticRegresion"]
-    
+    mlflow.set_tracking_uri("http://localhost:5000")
+
     for modelo in modelos:
         nombre=exchange+"_"+indiceName+"_"+modelo+"_"+dt.datetime.now().strftime("%m/%d/%Y, %H:%M")
 
@@ -132,4 +133,4 @@ if __name__ == "__main__":
                 # https://mlflow.org/docs/latest/model-registry.html#api-workflow
                 mlflow.sklearn.log_model( gbrt, modelo, registered_model_name=modelo)
             else:
-                mlflow.sklearn.log_model(gbrt, modelo)
+                mlflow.sklearn.log_model(gbrt, modelo,registered_model_name=modelo)

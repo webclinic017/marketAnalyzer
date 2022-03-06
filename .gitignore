@@ -8,3 +8,5 @@ getData/cache.sqlite
 **/.ipynb_checkpoints
 savedModels/
 **/mlruns
+**/artifacts
+**mlflow.db
