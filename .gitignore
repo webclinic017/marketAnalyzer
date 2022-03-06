@@ -7,3 +7,4 @@ __pycache__
 getData/cache.sqlite
 **/.ipynb_checkpoints
 savedModels/
+**/mlruns
