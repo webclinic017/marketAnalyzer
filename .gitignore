@@ -10,3 +10,4 @@ savedModels/
 **/mlruns
 **/artifacts
 **mlflow.db
+**comandos.sh

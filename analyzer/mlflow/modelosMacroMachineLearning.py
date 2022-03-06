@@ -89,7 +89,7 @@ if __name__ == "__main__":
     mlflow.set_tracking_uri("http://localhost:5000")
 
     for modelo in modelos:
-        nombre=exchange+"_"+indiceName+"_"+modelo+"_"+dt.datetime.now().strftime("%m/%d/%Y, %H:%M")
+        nombre=exchange+"_"+indiceName+"_"+modelo+"_"#+dt.datetime.now().strftime("%m/%d/%Y, %H:%M")
 
         with mlflow.start_run(run_name=nombre,experiment_id=1):
             if modelo=="gradientBoosting":
@@ -131,6 +131,6 @@ if __name__ == "__main__":
                 # There are other ways to use the Model Registry, which depends on the use case,
                 # please refer to the doc for more information:
                 # https://mlflow.org/docs/latest/model-registry.html#api-workflow
-                mlflow.sklearn.log_model( gbrt, modelo, registered_model_name=modelo)
+                mlflow.sklearn.log_model( gbrt, nombre, registered_model_name=nombre)
             else:
-                mlflow.sklearn.log_model(gbrt, modelo,registered_model_name=modelo)
+                mlflow.sklearn.log_model(gbrt, nombre,registered_model_name=nombre)

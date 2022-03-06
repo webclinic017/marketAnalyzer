@@ -90,7 +90,7 @@ if __name__ == "__main__":
                 # please refer to the doc for more information:
                 # https://mlflow.org/docs/latest/model-registry.html#api-workflow
     import mlflow
-    logged_model = 'runs:/a98f17f708d347f29dd0de7f78ab4bc5/gradientBoosting'
+    logged_model =  'runs:/4e58cea323814a14ba8f2257c4c68cb9/US_sp500_logisticRegresion_'
     
     # Load model as a PyFuncModel.
     loaded_model = mlflow.pyfunc.load_model(logged_model)
@@ -98,4 +98,13 @@ if __name__ == "__main__":
     # Predict on a Pandas DataFrame.
     import pandas as pd
     predicciones=loaded_model.predict(X_train)
+    print(np.mean(predicciones==y_train))
+    model_name = "US_sp500_logisticRegresion_"
+    model_version = 2
+    
+    model = mlflow.pyfunc.load_model(
+        model_uri=f"models:/{model_name}/{model_version}"
+    )
+    
+    predicciones=model.predict(X_train)
     print(np.mean(predicciones==y_train))
