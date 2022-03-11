@@ -25,7 +25,7 @@ Other folders are less important:
 There are a lot of steps to deploy all the tools so if you want to do it please contact me: **manuelpazpintor@gmail.com**.
 Anyway, if you want to try the doplyment by youself these are the steps:
 
-Properties file called **config.properties** must be created to load configurations in this folder, as shown in **example_config.properties**.
+Properties file called **config.properties** must be created and edited to load configurations in this folder, as shown in **example_config.properties**.
 
 ### Deploy:
 
