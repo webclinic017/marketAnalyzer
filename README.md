@@ -2,7 +2,7 @@
 
 There are several tools to analyze financial data, visualize data and develop strategies using different portfolios based on analysis results. 
 In this version  local storage is used but in next version cloud tools will be used.
-##Structure
+## Structure
 There are several tools that can be used:
 **analyzer/**. Is the core folder where data is analyzed.
 	**analyzer/mlflow**. Train and test models using MLflow
