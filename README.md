@@ -1,6 +1,6 @@
 # Market analyzer: forex and stocks
 
-There are several tools to analyze financial data, visualize data and develop strategies using different portfolios based on analysis results. The intention of this proyect is not to be install and used directly but to see its different features, and if you want to use it please contact me at manuelpazpintor@gmail.com.
+There are several tools to analyze financial data, visualize data and develop strategies using different portfolios based on analysis results. The intention of this proyect is not to be installed and used automatically (because it uses local storage and a lot of configurations so deployment is hard) but to see its different features, and if you want to use it please contact me at manuelpazpintor@gmail.com.
 In this version  local storage is used but in next version cloud storege will be used.
 ## Structure
 There proyect is mainly Python with the next structure:
