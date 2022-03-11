@@ -72,7 +72,7 @@ if __name__ == "__main__":
     elif exchange=="LSE":
            macro=macro.loc[events.index>=dt.datetime(2008,3,1)].drop(["gdpyoy"],axis=1)   
     warnings.filterwarnings("ignore")
-    np.random.seed(40)
+    np.random.seed( dt.datetime.now().second,)
     from sklearn.ensemble import GradientBoostingClassifier
     from sklearn.model_selection import GridSearchCV,RandomizedSearchCV
     m=len(macro.columns)-1
@@ -82,7 +82,7 @@ if __name__ == "__main__":
                                     X,
                                     y,
                                     train_size   = 0.7,
-                                    random_state = 1234,
+                                    random_state = dt.datetime.now().second,
                                     shuffle      = False
                                 )
     modelos=["gradientBoosting","adaBoosting","randomForest","decisionTree","svm","logisticRegresion"]

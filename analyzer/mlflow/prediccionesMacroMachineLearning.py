@@ -37,12 +37,12 @@ config.read('../../config.properties')
 pd.set_option('display.max_rows', None)
 logging.basicConfig(level=logging.WARN)
 logger = logging.getLogger(__name__)
-
+modelo_tipo="adaBoosting"
 SCALE= True if config.get('Entrenamiento', 'scale')=="True" else False
-
+exchange="US"
+indiceName="sp500"
 if __name__ == "__main__":
-    exchange="US"
-    indiceName="sp500"
+    
     getsectors=True
     getdescriptions=False
     columnas=["netIncome","totalRevenue","stock"]
@@ -90,21 +90,17 @@ if __name__ == "__main__":
                 # please refer to the doc for more information:
                 # https://mlflow.org/docs/latest/model-registry.html#api-workflow
     import mlflow
-    logged_model =  'runs:/4e58cea323814a14ba8f2257c4c68cb9/US_sp500_logisticRegresion_'
+    model_name = exchange+"_"+indiceName+"_"+modelo_tipo+"_"
+    model_version = 1
+    while 1:
+        try:
     
-    # Load model as a PyFuncModel.
-    loaded_model = mlflow.pyfunc.load_model(logged_model)
-    
-    # Predict on a Pandas DataFrame.
-    import pandas as pd
-    predicciones=loaded_model.predict(X_train)
-    print(np.mean(predicciones==y_train))
-    model_name = "US_sp500_logisticRegresion_"
-    model_version = 2
-    
-    model = mlflow.pyfunc.load_model(
-        model_uri=f"models:/{model_name}/{model_version}"
-    )
-    
-    predicciones=model.predict(X_train)
-    print(np.mean(predicciones==y_train))
+            model = mlflow.pyfunc.load_model(
+                model_uri=f"models:/{model_name}/{model_version}"
+            )
+            
+            predicciones=model.predict(X_test)
+            print(np.mean(predicciones==y_test))
+            model_version+=1
+        except Exception as e:
+            break

@@ -45,7 +45,7 @@ def correlograma(corr,pcorr):
     fig=plt.figure(figsize=FIG_SIZE)
     plt.locator_params(axis="x", nbins=len(corr))
     plt.bar(range(len(corr)),corr)
-    fig=plt.figure(figsize=(13,5))
+    fig=plt.figure(figsize=FIG_SIZE)
     plt.locator_params(axis="x", nbins=len(corr))
     plt.bar(range(len(pcorr)),pcorr)
 
@@ -76,7 +76,7 @@ def linearplot(dataframe1,title=None,scale=False,*args):
     
     
     
-def plot_forecast(serie,dataframePred,title=None,scale=False,*args):
+def plot_forecast(serie,dataframePred,fitted,title=None,scale=False,*args):
     
     fig=plt.figure(figsize=FIG_SIZE)
     plt.grid(True)
@@ -85,10 +85,11 @@ def plot_forecast(serie,dataframePred,title=None,scale=False,*args):
     ax1.xaxis.set_minor_formatter(mdates.DateFormatter('%m'))
     
     
-    ax1.plot(serie.index,serie,marker="o")
-    for k in ("mean","mean_ci_upper","mean_ci_lower"):
-        ax1.plot(dataframePred.index,dataframePred.loc[:,k],marker="o")
-    
+    ax1.plot(serie.index,serie,marker="o",label="real")
+    for k in ("mean","mean_ci_upper","mean_ci_lower","real"):
+        ax1.plot(dataframePred.index,dataframePred.loc[:,k],marker="o",label=k)
+    ax1.plot(fitted.index,fitted,marker="o",label="fitted")
+    ax1.legend()
     
     
 def linearplot_multiple_data(column,scale=False,title=None,*args):
