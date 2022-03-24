@@ -39,8 +39,8 @@ logging.basicConfig(level=logging.WARN)
 logger = logging.getLogger(__name__)
 modelo_tipo="adaBoosting"
 SCALE= True if config.get('Entrenamiento', 'scale')=="True" else False
-exchange="US"
-indiceName="sp500"
+exchange="XETRA"
+indiceName="dax30"
 if __name__ == "__main__":
     
     getsectors=True
@@ -103,4 +103,5 @@ if __name__ == "__main__":
             print(np.mean(predicciones==y_test))
             model_version+=1
         except Exception as e:
+            print(e)
             break

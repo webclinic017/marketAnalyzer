@@ -11,3 +11,5 @@ savedModels/
 **/artifacts
 **mlflow.db
 **comandos.sh
+**/plots
+**/resultados

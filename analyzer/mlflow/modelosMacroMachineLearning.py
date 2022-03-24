@@ -37,12 +37,12 @@ config.read('../../config.properties')
 pd.set_option('display.max_rows', None)
 logging.basicConfig(level=logging.WARN)
 logger = logging.getLogger(__name__)
-
+experiment_id=1
 SCALE= True if config.get('Entrenamiento', 'scale')=="True" else False
 
 if __name__ == "__main__":
-    exchange="US"
-    indiceName="sp500"
+    exchange="XETRA"
+    indiceName="dax30"
     getsectors=True
     getdescriptions=False
     columnas=["netIncome","totalRevenue","stock"]
@@ -91,7 +91,7 @@ if __name__ == "__main__":
     for modelo in modelos:
         nombre=exchange+"_"+indiceName+"_"+modelo+"_"#+dt.datetime.now().strftime("%m/%d/%Y, %H:%M")
 
-        with mlflow.start_run(run_name=nombre,experiment_id=1):
+        with mlflow.start_run(run_name=nombre,experiment_id=experiment_id):
             if modelo=="gradientBoosting":
                 gbrt,p,r,f1,ac,params=analyseDataModels.gradientBoostingClassify(X_train,y_train,X_test,y_test)
             
@@ -116,7 +116,7 @@ if __name__ == "__main__":
             for i,metric in metrics.items():
                
                 if isinstance(metric, float):
-                    mlflow.log_param(i, metric)
+                    mlflow.log_metric(i, metric)
                 else:
                     # 1 because in models first value is False class and second is True class
                     mlflow.log_metric(i, metric[1])

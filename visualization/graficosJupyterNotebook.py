@@ -25,7 +25,7 @@ from pydataset import data
 import transformations
 pct_change=transformations.pct_change 
 FIG_SIZE=(10,10)
-
+POS_INFO=(0.03,0.9)
 #morado es true
 def scatterWithCOlor(X,y,cero=None,pendiente=None):
    
@@ -76,7 +76,7 @@ def linearplot(dataframe1,title=None,scale=False,*args):
     
     
     
-def plot_forecast(serie,dataframePred,fitted,title=None,scale=False,*args):
+def plot_forecast(serie,dataframePred,fitted,title=None,scale=False,fileName=None,extraInfo=None,*args,):
     
     fig=plt.figure(figsize=FIG_SIZE)
     plt.grid(True)
@@ -88,8 +88,16 @@ def plot_forecast(serie,dataframePred,fitted,title=None,scale=False,*args):
     ax1.plot(serie.index,serie,marker="o",label="real")
     for k in ("mean","mean_ci_upper","mean_ci_lower","real"):
         ax1.plot(dataframePred.index,dataframePred.loc[:,k],marker="o",label=k)
+    
     ax1.plot(fitted.index,fitted,marker="o",label="fitted")
     ax1.legend()
+    if title is not None:
+        plt.title(title)
+    if extraInfo is not None:
+        plt.figtext(POS_INFO[0],POS_INFO[1],extraInfo)
+    if fileName is not None:
+        plt.savefig(fileName)
+   
     
     
 def linearplot_multiple_data(column,scale=False,title=None,*args):

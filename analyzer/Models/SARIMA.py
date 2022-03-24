@@ -41,10 +41,11 @@ config = configparser.ConfigParser()
 config.read('../../config.properties')
 log_dir_excepciones = "../../"+config.get('LOGS_DIR', 'excepciones')
 import writer
-periodicidad=int(config.get('EntrenamientoARIMA', 'periodicidad'))
 nivel_confianza=float(config.get('EntrenamientoARIMA', 'nivel_confianza'))
-max_lag=int(config.get('EntrenamientoARIMA', 'max_lag'))
-def calcularDiferenciacion(serie_train,serie):
+todos=0.5
+maximosOrders=3
+ponderaciones=[float(e) for e in (config.get('EntrenamientoARIMA', 'ponderaciones').split(" "))]
+def calcularDiferenciacion(serie_train,serie,periodicidad):
    
     #la hipotesis nula es que hay raiz unitaria
     diferenciacion=0
@@ -53,7 +54,7 @@ def calcularDiferenciacion(serie_train,serie):
     paramFuller=5
     
     
-    adf=adfuller(serie_train,maxlag=max_lag)
+    adf=adfuller(serie_train)
     adf
     posibleEstacionaridad=False
     diferenciacion=0
@@ -63,29 +64,24 @@ def calcularDiferenciacion(serie_train,serie):
         
     if posibleEstacionaridad and estacional:
         serie1=pd.Series(serie_train).diff(periodicidad).dropna()
-        adf1=adfuller(serie1,maxlag=max_lag)
+        adf1=adfuller(serie1)
     if posibleEstacionaridad:
         serie2=pd.Series(serie_train).diff(1).dropna()
-        adf2=adfuller(serie2,maxlag=max_lag)
+        adf2=adfuller(serie2)
       
     if posibleEstacionaridad and estacional:
-        for k in ["1%","5%"]:
-            if adf2[0]<adf1[4][k]:
-                if adf1[0]<adf1[4][k]:
-                    if adf1[1]<0.005:
-                        diferenciacionEstacional=1
-                        
-                    else:
-                        diferenciacion=1
-                      
-    
-                else:
-                    diferenciacion=1
-                    
+        print(adf1,adf2)
+        niveles=[0.0001,0.001,0.01,0.05,0.01]
+        for idx,nivel in enumerate(niveles[1:]):
+            if adf1[1]<nivel:
+                diferenciacionEstacional=1
+                break
+            elif adf2[1]<niveles[idx]:
+                diferenciacion=1
                 break
         if diferenciacion==0 and diferenciacionEstacional==0:
                 serie3=pd.Series(serie1).diff(1).dropna()
-                adf3=adfuller(serie3,maxlag=max_lag)
+                adf3=adfuller(serie3)
                 
                 if adf3[0]<adf3[4]["5%"]:
                     diferenciacionEstacional=1
@@ -102,7 +98,7 @@ def calcularDiferenciacion(serie_train,serie):
 
 
 class Modelo:
-    def __init__(self,modelo,modeloExtendido,significacionP=None,significacionQ=None,significacionPEst=None,significacionQEst=None,ponderaciones=[0.6,0.4]):
+    def __init__(self,modelo,modeloExtendido,significacionP=None,significacionQ=None,significacionPEst=None,significacionQEst=None):
         
         self.modelo=modelo
         self.modeloExtendido=modeloExtendido
@@ -119,8 +115,9 @@ class Modelo:
         self.significacionQEst=significacionQEst
         
         
-def crearYProbarModelo(serie_train,serie_test,ordenes=None,ordenesSeason=None,diferenciacion=0,diferenciacionSeason=0,periodo=periodicidad):
+def crearYProbarModelo(serie_train,serie_test,ordenes=None,ordenesSeason=None,diferenciacion=0,diferenciacionSeason=0,periodo=4):
     modelo=None
+    
     notSeasonalTrend="c"
     seasonalTrend="c"
     if diferenciacion>0:
@@ -146,6 +143,7 @@ def crearYProbarModelo(serie_train,serie_test,ordenes=None,ordenesSeason=None,di
         modelo=ARIMA(endog=serie_train,order=ordenes,trend=notSeasonalTrend)
     elif ordenesSeason is not None:
         modelo=ARIMA(endog=serie_train,seasonal_order=ordenesSeason,trend= seasonalTrend)
+    
     if modelo is not None:    
         
         adj=modelo.fit()
@@ -161,7 +159,7 @@ def devolverEstadisticos(corr,pcorr,diferenciacion,serie):
     return abs(corr)/desv,abs(pcorr)/desv
    
     
-def estadisticosCorrelaciones(serie_train,diferenciacion,diferenciacionEstacional):  
+def estadisticosCorrelaciones(serie_train,diferenciacion,diferenciacionEstacional,periodicidad):  
     serie1=serie_train.copy()
     if diferenciacion and  diferenciacionEstacional:
         serie1=serie_train.diff(periodicidad).diff(1)
@@ -177,7 +175,7 @@ def estadisticosCorrelaciones(serie_train,diferenciacion,diferenciacionEstaciona
   
     #graficos.correlograma(corr,pcorr)
     return estCorr,estPcorr
-def reglas(serie_train,serie_test,estCorr,estPcorr,diferenciacion,diferenciacionSeason):
+def reglas(serie_train,serie_test,estCorr,estPcorr,diferenciacion,diferenciacionSeason,periodicidad):
     nivel=norm.ppf(1-nivel_confianza/2)
     ordenesp={}
     ordenesq={}
@@ -185,6 +183,13 @@ def reglas(serie_train,serie_test,estCorr,estPcorr,diferenciacion,diferenciacion
     ordenesq={}
     ordenesqEstacional={}
     modelos={}
+    if periodicidad<=7:
+        multLags=4
+        max_lag=periodicidad
+    else:
+        multLags=2
+        max_lag=7
+    
     for k in range(max_lag,0,-1): 
         if abs(estCorr[k])>nivel:
 
@@ -196,9 +201,11 @@ def reglas(serie_train,serie_test,estCorr,estPcorr,diferenciacion,diferenciacion
 
             ordenesq={i:norm.cdf(abs(estPcorr[i]))-(1-norm.cdf(abs(estPcorr[i]))) for i in range(1,k+1)}
             break
-        #ordenesq={1:0.5}
-    v=4
-    L=min(len(estCorr)-1,v*periodicidad)  
+    #ordenesq={1:0.5}
+
+   
+    
+    L=min(len(estCorr)-1,  int( multLags*periodicidad))
     for k in range(L,periodicidad-1,-1): 
         if abs(estCorr[k])>nivel:
           
@@ -214,12 +221,29 @@ def reglas(serie_train,serie_test,estCorr,estPcorr,diferenciacion,diferenciacion
          
             l=int(k/periodicidad)
             if l not in  ordenesqEstacional.keys():
-                ordenesqEstacional[l]=norm.cdf(abs(estCorr[k]))-(1-norm.cdf(abs(estCorr[k])))
-          
-        #ordenesq={1:0.5}
-   
-        
-        
+                ordenesqEstacional[l]=norm.cdf(abs(estPcorr[k]))-(1-norm.cdf(abs(estPcorr[k])))
+    if todos!=None:
+        for dic in ordenesp,ordenespEstacional:
+            claves=list(dic.keys())
+            if len(claves)>maximosOrders:
+                claves.sort(key=lambda t:abs(estCorr[t]),reverse=True)
+                print(claves)
+                print(estCorr)
+                
+                tam=int(todos*len(claves))
+               
+                
+                for e in claves[tam:]:
+                    print(e)
+                    dic.pop(e)
+        for dic in ordenesq,ordenesqEstacional:
+            claves=list(dic.keys())
+            if len(claves)>maximosOrders:
+                claves.sort(key=lambda t:abs(estPcorr[t]),reverse=True)
+                tam=int(todos*len(claves))
+                for e in claves[tam:]:
+                    dic.pop(e)
+    
     lista=[]
     listaEstacional=[]
     if len(ordenesp.keys())>0 and len(ordenesq.keys())>0:
@@ -242,6 +266,8 @@ def reglas(serie_train,serie_test,estCorr,estPcorr,diferenciacion,diferenciacion
     modelos=[]
     print(lista)
     print(listaEstacional)
+    
+   
     for orde in lista:
         try:
             if (diferenciacionSeason==0) or (diferenciacionSeason>0 and orde[0]<periodicidad and orde[1]<periodicidad):
@@ -260,11 +286,20 @@ def reglas(serie_train,serie_test,estCorr,estPcorr,diferenciacion,diferenciacion
     
     for ordeEst in listaEstacional:
         try:
-            adj,adj2=crearYProbarModelo(serie_train,serie_test,ordenes=None,ordenesSeason=ordeEst,diferenciacion=diferenciacion,diferenciacionSeason=diferenciacionSeason,periodo=periodicidad)   
+            adj,adj2=crearYProbarModelo(serie_train,serie_test,ordenes=None,ordenesSeason=ordeEst,diferenciacion=diferenciacion,diferenciacionSeason=diferenciacionSeason,periodo=periodicidad)  
+            
+            sigPEst=   ordenespEstacional[ordeEst[0]]
+            sigQESt= ordenesqEstacional[ordeEst[1]]
+            modelo=Modelo(adj,adj2, None,None, sigPEst,sigQESt)
+            modelos.append(modelo)
         except Exception as e:
                 writer.write(e,
                      log_dir_excepciones)
-        for orde in lista:
+        if todos!=None:
+            long=int(len(lista)/2)
+        else:
+            long=len(lista)
+        for orde in lista[:long]:
             try:
                 if orde[0]<4 and orde[1]<4:
                     #print(orde,ordeEst)
