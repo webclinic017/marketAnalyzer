@@ -13,7 +13,9 @@ import os
 retval=os.getcwd()
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 print(os.getcwd())
+sys.path.append("../getData")
 sys.path.append("../functions")
+import bdStocks
 import transformationsDataframes
 import transformations
 import pandas as pd
@@ -26,6 +28,7 @@ class ObtenerModelos():
       
         mlflow.set_tracking_uri("http://localhost:5000")
         self.client=client = MlflowClient()
+        self.bd=bdStocks.getData()
     def getModelo(self,stock,exchange,column,data1,periodoIndice):
         data=data1.copy()
         filter_string = "name ='{}'".format(exchange+"_"+stock+"_"+column+"_SARIMA")
@@ -98,3 +101,67 @@ class ObtenerModelos():
                  primero=primero.map(lambda x:(math.exp(x)+2*aux))
                  segundo=segundo.map(lambda x:(math.exp(x)+2*aux))
         return nas,minimo,model,model.extend(serie_test1),fechaI
+    
+    def getModelos(self,exchange,column,EXPERIMENT_ID,periodoIndice):
+        retval=os.getcwd()
+        os.chdir(os.path.dirname(os.path.abspath(__file__)))
+        infos=[]
+        filter_string = "name LIKE '"+exchange+"_%{}%'".format(column)
+        models=self.client.search_registered_models(filter_string=filter_string)
+        
+        for model in models:
+            array=model.name.split("_")
+            caracteristicas=model.latest_versions[0]
+            #print((caracteristicas))
+            #print(array[1])
+            if int(caracteristicas.source.split("/")[2])==EXPERIMENT_ID:
+                infoCaso=pr.InfoCaso(array[0],array[1],caracteristicas.run_id,caracteristicas.version)
+            
+                infos.append(infoCaso)
+        arr={}
+        for info in infos:
+            
+                #print(info)
+                print(info.stock)
+                run=self.client.get_run(info.run_id)
+                #print_run_info(run)
+                model_name=info.exchange+"_"+info.stock+"_"+column+"_SARIMA"
+                model_version=info.version
+             
+                model = mlflow.statsmodels.load_model(
+                            model_uri=f"models:/{model_name}/{model_version}"
+                        )
+                exponencial=True if run.data.params['transformExp']=="True" else "False"
+             
+                minimo=float(run.data.params['transformTrasl'])
+                divisor=float(run.data.params['transformScale'])
+                nas=float(run.data.params['numDatosNulos'])
+                #obtenemos los datos del stock
+                data=self.bd.getDataByStock("fundamental",info.exchange,info.stock,bd=True,columnas=[column])
+                #dividimos por 1M y eliminamos nas
+                data=data.interpolate(method='linear')/divisor
+                data=data.dropna()
+        
+                #pasamos a mensual y rellenamos el indice
+                data=transformationsDataframes.pasarAtrimestres(data)
+                all_days = pd.date_range(data.index[0], data.index[-1],freq=periodoIndice,normalize=True)
+                all_days=all_days.map(lambda x:x.replace(day=1))
+                ultimaFecha=data.index[-1]
+                penultimaFecha=data.index[-2]
+                ultimoValor=data.iloc[-1] 
+                data=data.reindex(all_days)
+                data=data.interpolate(method='linear').dropna()
+                if data.index[-1]!=ultimaFecha:
+                            
+                            data.loc[ultimaFecha]=ultimoValor
+                #obtenemos la ultima fecha de train
+                fechaI=model.predict().index[-1]
+                #obtenemos train set y test set
+                serie_test=data.loc[data.index>fechaI]
+                serie_train=data.loc[data.index<=fechaI]
+                
+                arr[info.exchange+"_"+info.stock]={"modelo":model,"data":data,"serie_train":serie_train,"serie_test":serie_test,"translate":minimo,"exponential":exponencial}
+        os.chdir(retval)
+        return arr
+               
+    

@@ -71,7 +71,7 @@ def calcularDiferenciacion(serie_train,serie,periodicidad):
       
     if posibleEstacionaridad and estacional:
         print(adf1,adf2)
-        niveles=[0.0001,0.001,0.01,0.05,0.01]
+        niveles=[0.0001,0.001,0.01,0.05,0.1]
         for idx,nivel in enumerate(niveles[1:]):
             if adf1[1]<nivel:
                 diferenciacionEstacional=1
@@ -83,11 +83,12 @@ def calcularDiferenciacion(serie_train,serie,periodicidad):
                 serie3=pd.Series(serie1).diff(1).dropna()
                 adf3=adfuller(serie3)
                 
-                if adf3[0]<adf3[4]["5%"]:
+                if adf3[0]<adf3[4]["10%"]:
                     diferenciacionEstacional=1
                     diferenciacion=1
                 else:
-                    serie_train=None
+                    diferenciacionEstacional=1
+                    diferenciacion=2
     
     
             

@@ -200,7 +200,7 @@ class getData:
             writer.write("BD access time to sectors "+str(timer.getTime()),
                      log_dir_rendimiento)
         return dict(data)
-    def obtenerStocksStrategy(self,filt,tipo,columnas=None):
+    def obtenerStocksStrategy(self,filt,tipo,namesOnly=False,columnas=None):
         broker=None
         stocks=[]
         dataframe=None
@@ -218,29 +218,33 @@ class getData:
                          
                 else:
                     aux=self.getStocks(exchange,broker=broker)
-                for stock in aux:
-                       
-                        try:
-                            dataframe1=self.getDataByStock(tipo,exchange,stock,columnas=columnas)
-                            dataframe1["stock"]=stock
-                            dataframe1["exchange"]=exchange
-                            if "sector" in filt.keys():
-                                   
-                                    dataframe1["sector"]=dataframe1["stock"].transform(lambda t:sector[t])
-                            if dataframe is None:
-                                dataframe=dataframe1
-                            else:
-                                dataframe=pd.concat([dataframe,dataframe1])
-                            
-                        except Exception as e:
-                            stocksAEliminar.append(stock)
+                if not  namesOnly:
+                    for stock in aux:
+                           
+                            try:
+                                dataframe1=self.getDataByStock(tipo,exchange,stock,columnas=columnas)
+                                dataframe1["stock"]=stock
+                                dataframe1["exchange"]=exchange
+                                if "sector" in filt.keys():
+                                       
+                                        dataframe1["sector"]=dataframe1["stock"].transform(lambda t:sector[t])
+                                if dataframe is None:
+                                    dataframe=dataframe1
+                                else:
+                                    dataframe=pd.concat([dataframe,dataframe1])
+                                
+                            except Exception as e:
+                                stocksAEliminar.append(stock)
                             
                 aux=list(set(aux)-set(stocksAEliminar))            
                 stocks+=[exchange+"_"+e for e in aux]  
         
                 
         print(stocks)
-        return dataframe,stocks
+        if not  namesOnly:
+            return dataframe,stocks
+        else:
+            return stocks
 if __name__=="__main__":
         
     bd=  getData()

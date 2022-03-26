@@ -90,7 +90,6 @@ bd=bdStocks.getData()
 from mlflow.tracking import MlflowClient
 client = MlflowClient()
 column="netIncome"
-diasDeMargen=40
 periodoIndice="3M"
 import math
 def print_run_info(r):

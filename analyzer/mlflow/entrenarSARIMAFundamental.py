@@ -48,8 +48,7 @@ logger = logging.getLogger(__name__)
 tam_train=float(config.get('EntrenamientoARIMA', 'tam_train'))
 SCALE= True if config.get('Entrenamiento', 'scale')=="True" else False
 DIVISOR=1000000
-exchange="LSE"
-indiceName="dax30"
+exchange="US"
 columnas=["netIncome","totalRevenue","stock"]
 columnasPrecios=["Adjusted_close","stock"]
 tamMinimo=50
@@ -131,7 +130,7 @@ def analizarFundamental(exchange):
                 else:
                     data1=data.copy()
                
-                data1=transformationsDataframes.pasarAMensual(data1)
+                data1=transformationsDataframes.pasarAtrimestres(data1)
                 all_days = pd.date_range(data1.index[0], data1.index[-1],freq=periodoIndice,normalize=True)
                 all_days=all_days.map(lambda x:x.replace(day=1))
                 nas+=len(all_days)-len(data1.index)

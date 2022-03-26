@@ -98,7 +98,27 @@ def plot_forecast(serie,dataframePred,fitted,title=None,scale=False,fileName=Non
     if fileName is not None:
         plt.savefig(fileName)
    
+def plot_forecast_dataframe(dataframePred,title=None,scale=False,fileName=None,extraInfo=None,*args,):
     
+    fig=plt.figure(figsize=FIG_SIZE)
+    plt.grid(True)
+    ax1 = fig.add_subplot(111, projection='rectilinear')  # Engadimos Axes á figura (contén os elementos do debuxo, queremos unha matrix [1,2])
+    
+    ax1.xaxis.set_minor_formatter(mdates.DateFormatter('%m'))
+    
+    
+
+    for k in dataframePred.columns:
+        ax1.plot(dataframePred.index,dataframePred.loc[:,k],marker="o",label=k)
+    
+   
+    ax1.legend()
+    if title is not None:
+        plt.title(title)
+    if extraInfo is not None:
+        plt.figtext(POS_INFO[0],POS_INFO[1],extraInfo)
+    if fileName is not None:
+        plt.savefig(fileName)
     
 def linearplot_multiple_data(column,scale=False,title=None,*args):
     fig=plt.figure(figsize=FIG_SIZE)
