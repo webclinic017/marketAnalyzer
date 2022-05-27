@@ -1,0 +1,20 @@
+feature: TO_ENB
+fechas:
+  fecha_largo: "2010-01-01"
+  fecha_medio: "2016-01-01"
+  fecha_corto: "2022-01-01"
+  fecha_dia: "2022-03-01"
+prophet:
+  number_combs: 20
+  cross_validation: True
+  variables_externas: False
+  param_grid:
+     'changepoint_prior_scale': [ 0.01, 0.1, 0.05, 0.5 ]
+     'seasonality_prior_scale': [ 0.01, 0.1, 1,5, 10,15,20 ]
+     "monthly_seasonality": [ True, False ]
+     "use_holidays": [ False ]
+     "oil": [ True, False ]
+     "monthly_N": [ 3 ]
+     "yearly_N": [ 10 ]
+     "weekly_N": [ 3 ]
+

@@ -141,9 +141,11 @@ def crearYProbarModelo(serie_train,serie_test,ordenes=None,ordenesSeason=None,di
        
         modelo=ARIMA(endog=serie_train,order=ordenes,seasonal_order=ordenesSeason)
     elif ordenes is not None:
-        modelo=ARIMA(endog=serie_train,order=ordenes,trend=notSeasonalTrend)
+        #modelo=ARIMA(endog=serie_train,order=ordenes,trend=notSeasonalTrend)
+        modelo=ARIMA(endog=serie_train,order=ordenes)
     elif ordenesSeason is not None:
-        modelo=ARIMA(endog=serie_train,seasonal_order=ordenesSeason,trend= seasonalTrend)
+        #modelo=ARIMA(endog=serie_train,seasonal_order=ordenesSeason,trend= seasonalTrend)
+        modelo=ARIMA(endog=serie_train,seasonal_order=ordenesSeason)
     
     if modelo is not None:    
         
@@ -176,6 +178,10 @@ def estadisticosCorrelaciones(serie_train,diferenciacion,diferenciacionEstaciona
   
     #graficos.correlograma(corr,pcorr)
     return estCorr,estPcorr
+def reglasSimple(serie_train,serie_test,estCorr,estPcorr,diferenciacion,diferenciacionSeason,periodicidad):
+   adj,adj2=crearYProbarModelo(serie_train,serie_test,ordenes=(1,1),ordenesSeason=None,diferenciacion=1,diferenciacionSeason=0,periodo=periodicidad)
+   modelos=[Modelo(adj,adj2)]
+   return modelos
 def reglas(serie_train,serie_test,estCorr,estPcorr,diferenciacion,diferenciacionSeason,periodicidad):
     nivel=norm.ppf(1-nivel_confianza/2)
     ordenesp={}
@@ -328,3 +334,62 @@ def reglas(serie_train,serie_test,estCorr,estPcorr,diferenciacion,diferenciacion
     
   
     return modelos
+
+
+def obtenerDataFrameDeModelo(modelo:dict,clave:str):
+    exponencial=modelo["exponential"]
+    minimo=modelo["translate"]
+    serie_train=modelo["serie_train"]
+    serie_test=modelo["serie_test"]
+    model=modelo["modelo"]
+    if exponencial :
+                     if minimo<0:
+                         serie_test1=serie_test-minimo*2
+                     elif minimo==0:
+                         serie_test1=serie_test+10
+                     else:
+                          serie_test1=serie_test.copy()
+                         
+                     boxcox=transformations.boxcox
+    
+                     
+                     serie_test1=(serie_test1).applymap(lambda x:(boxcox(0,x)))
+    else:
+                    serie_test1=serie_test.copy()
+    extendido=model.extend(serie_test1 )  
+    segundo=extendido.fittedvalues
+    forecastOne=extendido.forecast(1)
+    #segundo.loc[forecastOne.index[0]]=forecastOne.iloc[0]
+    segundo=pd.concat([segundo, forecastOne])
+    order=model.specification["order"]
+    s_order=model.specification["seasonal_order"]
+    inicio=max(order[0]+order[1],order[2]+order[1],s_order[0]*s_order[3]+s_order[1],s_order[2]*s_order[3]+s_order[1])
+    pred=model.get_prediction(inicio,len(serie_train)-1).summary_frame()
+   
+    dataframePred=model.get_forecast(len(serie_test)+1).summary_frame()
+    dataframePred["fitted"]=segundo
+    pred["fitted"]=model.fittedvalues
+    
+    if  exponencial:
+                
+                 aux=minimo if minimo<0 else 0
+               
+                 predicciones=segundo.map(lambda x:(math.exp(x)+2*aux))
+                 forecastOne= forecastOne.map(lambda x:(math.exp(x)+2*aux))
+                 dataframePred.loc[:,["fitted","mean","mean_ci_lower","mean_ci_upper"]]=dataframePred.loc[:,["fitted","mean","mean_ci_lower","mean_ci_upper"]].applymap(lambda x:(math.exp(x)+2*aux))
+                 pred.loc[:,["fitted","mean","mean_ci_lower","mean_ci_upper"]]=pred.loc[:,["fitted","mean","mean_ci_lower","mean_ci_upper"]].applymap(lambda x:(math.exp(x)+2*aux))
+                 dataframePred.loc[:,["mean_se"]]=dataframePred.loc[:,["mean_se"]].applymap(lambda x:(math.exp(x)))
+                 pred.loc[:,["mean_se"]]=pred.loc[:,["mean_se"]].applymap(lambda x:(math.exp(x)))
+    else:
+        predicciones=segundo
+    dataframePred["real"]=serie_test
+    pred["real"]=serie_train
+    
+   
+    
+    pred=pd.concat([pred,dataframePred])
+    pred["stock"]=clave
+    pred.set_index(['stock'], append=True,drop=True,inplace=True)
+    #print("Fecha forecast: "+str(forecastOne.index[0])+ " real: "+str(serie_test.tail(1).values[0][0])+ " fitted in test: "+str(predicciones.tail(1).values[0])+ " forecast: "+ str(forecastOne.values[0]))
+    #print(pred.tail(2))
+    return pred

@@ -34,11 +34,11 @@ class PDF(FPDF):
     def page_body(self):
         # Determine how many plots there are per page and set positions
         # and margins accordingly
-        print(self.image1)
+        
         self.image(self.image1,15,20,200)
             
             
-    def print_page(self,text,image,image2,title):
+    def print_page(self,text,image,image2=None,title=None):
         # Generates the report
         self.text=text
         self.image1=image
@@ -47,6 +47,7 @@ class PDF(FPDF):
         self.page_text()
         self.add_page()
         self.page_body()
-        self.image1=image2
-        self.add_page()
-        self.page_body()
+        if image2!=None:
+            self.image1=image2
+            self.add_page()
+            self.page_body()

@@ -22,12 +22,14 @@ import logging
 import sys
 
 sys.path.append("../getData")
+sys.path.append("../metricas")
 sys.path.append("../../visualization")
 sys.path.append("../functions")
 sys.path.append("../Models")
 import bdStocks
 import reports
 import bdMacro
+import metricas
 import analyseDataModels 
 import graficosJupyterNotebook as graficos
 import numpy as np
@@ -42,6 +44,7 @@ logger = logging.getLogger(__name__)
 EXPERIMENT_ID=2
 ROUND=3
 ROUND2=6
+MAX_RESULTS=1000
 import SARIMA
 import bdStocks
 import bdMacro
@@ -62,6 +65,10 @@ config.read('../../config.properties')
 pd.set_option('display.max_rows', None)
 logging.basicConfig(level=logging.WARN)
 logger = logging.getLogger(__name__)
+artifactsDir= config.get('MLFLOW', 'artifactsDir')
+retval=os.getcwd()
+#os.chdir(os.path.dirname(os.path.abspath(__file__)))
+os.chdir(artifactsDir)
 mlflow.set_tracking_uri("http://localhost:5000")
 import matplotlib
 matplotlib.use('Agg')
@@ -76,7 +83,7 @@ client = MlflowClient()
 column="netIncome"
 periodoIndice="3M"
 import math
-exchange="XETRA"
+exchange="MC"
 def print_run_info(r):
     
         print("run_id: {}".format(r.info.run_id))
@@ -90,7 +97,7 @@ def print_run_info(r):
 #%%
 infos=[]
 filter_string = "name LIKE '"+exchange+"_%{}%'".format(column)
-models=client.search_registered_models(filter_string=filter_string)
+models=client.search_registered_models(filter_string=filter_string,max_results=MAX_RESULTS)
 
 for model in models:
     array=model.name.split("_")
@@ -227,7 +234,12 @@ for info in infos:
               
              
         error=np.mean(abs(serie_test.values-segundo.values))
-        dicc={"orders":model.specification["order"],"seasonal orders":model.specification['seasonal_order'],"error":error/np.mean(abs(serie_test.values))}
+        mapeTrain=metricas.MAPE(pred["real"],pred["fitted"])
+        mapeTest=metricas.MAPE(serie_test[column],predicciones)
+        smapeTrain=metricas.SMAPE(pred["real"],pred["fitted"])
+        smapeTest=metricas.SMAPE(serie_test[column],predicciones)
+        print(mapeTrain,mapeTest,smapeTrain,smapeTest)
+        dicc={"mapeTrain":mapeTrain,"mapeTest":mapeTest,"smapeTrain":smapeTrain,"smapeTest":smapeTest}
         pred=pred.rename(lambda x: x+" "+column if x!="prize" else x,axis="columns")
         graficos.plot_forecast_dataframe(pred,title=info.exchange+"_"+info.stock+" "+"scaled",extraInfo=None,fileName="plots/"+model_name)
         
@@ -235,8 +247,12 @@ for info in infos:
         sec=None
         if info.stock in sectors.keys():
             sec=sectors[info.stock]
+        else:
+            sec="None"
         if info.stock in descriptions.keys():
             des=descriptions[info.stock]
+        else:
+            des="None"
         texto="\n\n  Name : {}  sector : {}\n {}\n".format(info.exchange+"_"+info.stock,sec,des)
         title=info.exchange+": "+info.stock+" ("+sec+" )"
         texto+="Orders: {}\n".format(model.specification["order"])
@@ -246,18 +262,17 @@ for info in infos:
         texto+=("Test de normalidad: {}\n".format(round(model.test_normality(method="jarquebera")[0][1],ROUND)))
         u=(model.test_serial_correlation(method="ljungbox"))[0][1]
         texto+=("Test de colinealidad: {}\n".format([round(e,ROUND) for e in list(u)]))
+        texto+=("Metrics (MAPE-SMAPE) {}\n".format(dicc))
         
         
       
         pd1.print_page(texto,"plots/"+model_name+".png","plots/grafico"+model_name+".png",title)
     except Exception as e:
          print(e)
-pd1.output("../../reports/"+exchange+".pdf", 'F')
+    
+pd1.output("./reports/"+exchange+"_"+column+".pdf", 'F')
        
-           
-        
-        
-       
+
     
     
   

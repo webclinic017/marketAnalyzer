@@ -26,6 +26,8 @@ sys.path.append("../getData")
 sys.path.append("../../visualization")
 sys.path.append("../functions")
 sys.path.append("../Models")
+sys.path.append("../metricas")
+import metricas
 import SARIMA
 import bdStocks
 import bdMacro
@@ -40,6 +42,7 @@ import transformationsDataframes
 import writer
 import modelosSARIMA
 from multiprocessing import Process
+from  transformationsDataframes import transformacionExponencialInversa
 config = configparser.ConfigParser()
 config.read('../../config.properties')
 pd.set_option('display.max_rows', None)
@@ -50,7 +53,7 @@ SCALE= True if config.get('Entrenamiento', 'scale')=="True" else False
 DIVISOR=1
 experiment_id=3
 comprobarEntrenado=True
-exchange="XETRA"
+exchange="MC"
 indiceName="dax30"
 columnas=["netIncome","totalRevenue","stock"]
 columnasPrecios=["Adjusted_close","stock"]
@@ -75,10 +78,24 @@ def realizarAnalisis(serie_train,serie_test,serie,stock,nas,minimo,transformar,D
     estCorr,estPcorr=SARIMA.estadisticosCorrelaciones(serie_train,diferenciacion,diferenciacionEstacional,periodicidad)
     print( diferenciacion,diferenciacionEstacional)
     modelos=SARIMA.reglas(serie_train,serie_test,estCorr,estPcorr,diferenciacion,diferenciacionEstacional,periodicidad)
-    modelos.sort(key=lambda t:t.aicTotal)
+    #modelos=SARIMA.reglasSimple(serie_train,serie_test,estCorr,estPcorr,diferenciacion,diferenciacionEstacional,periodicidad)
+    modelos.sort(key=lambda t:t.aicTest)
     if len(modelos)>0:
         modelo=modelos[0]
-        dic={"ponderacion":ponderaciones[0],"numDatosTotales":len(serie),"numDatosNulos":nas,"transformTrasl":minimo,"transformExp":transformar,"transformScale":DIVISOR}
+        fitted_train=modelo.modelo.fittedvalues
+        fitted_test=modelo.modelo.extend(serie_test).fittedvalues
+        if transformar:
+               serie_train=transformacionExponencialInversa(serie_train,minimo)
+               serie_test=transformacionExponencialInversa(serie_test,minimo)
+               fitted_train=transformacionExponencialInversa(fitted_train,minimo)
+               fitted_test=transformacionExponencialInversa(fitted_test,minimo)
+           
+        mapetrain=metricas.MAPE(serie_train,fitted_train)
+        smapetrain=metricas.SMAPE(serie_train,fitted_train)
+        mapeTest=metricas.MAPE(serie_test,fitted_test)
+        smapeTest=metricas.SMAPE(serie_test,fitted_test)
+        dic={"ponderacion":ponderaciones[0],"numDatosTotales":len(serie),"numDatosNulos":nas,"transformTrasl":minimo,"transformExp":transformar,"transformScale":DIVISOR,\
+                 "mapeTrain":mapetrain,"mapeTest":mapeTest,"smapeTrain":smapetrain,"smapeTest":smapeTest}
         modelosSARIMA.añadirModelo(modelo,exchange+"_"+stock,column,experiment_id,**dic)
     return modelos
   
@@ -90,6 +107,7 @@ def analizarFundamental(exchange):
     
     dicModelos={}
     for stock in stocks:
+    
         print("Stock %s"%stock)
         if comprobarEntrenado:
             cad=exchange+"_"+stock+"_"+column+"_SARIMA"
@@ -109,6 +127,7 @@ def analizarFundamental(exchange):
            
             data=bd.getDataByStock("precios",exchange,stock,bd=True,columnas=[column])
             data=transformationsDataframes.pasarAMensual(data)
+        
             if len(data)>tamMinimo:
                 nas+=int(data.isna().sum())
                 
@@ -120,6 +139,7 @@ def analizarFundamental(exchange):
                 transformar=True
                 if transformar:
                     minimo=np.min(data)[0]
+                    print(minimo)
                     if minimo<0:
                         #print(minimo)
                         data=data-minimo*2
@@ -145,8 +165,14 @@ def analizarFundamental(exchange):
                 serie=data1[column].interpolate(method='linear').dropna()
                 tam=len(serie)
                 lim_train=int(tam*tam_train)
-                serie_train=serie[:lim_train]
-                serie_test=serie[lim_train:]
+                #serie_train=serie[:lim_train]
+                #serie_test=serie[lim_train:]
+                import datetime as dt
+                serie_train=serie.loc[serie.index<=dt.datetime(2016,1,1)]
+                serie_test=serie.loc[serie.index>dt.datetime(2016,1,1)]
+                import math
+                print(serie_test.transform(lambda x:math.exp(x)).tail(10))
+           
                 #print(serie.shape,nas)
                 #print(serie_test)
                 modelos=realizarAnalisis(serie_train,serie_test,serie,stock,nas,minimo,transformar,DIVISOR)

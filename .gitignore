@@ -13,3 +13,8 @@ savedModels/
 **comandos.sh
 **/plots
 **/resultados
+**/backup.sql
+**/*.csv
+**/modelos/**
+**/plotsPrecios/**
+**/cointegracion/reports/**

@@ -44,7 +44,7 @@ config.read('../../config.properties')
 pd.set_option('display.max_rows', None)
 logging.basicConfig(level=logging.WARN)
 logger = logging.getLogger(__name__)
-EXPERIMENT_ID=2
+EXPERIMENT_ID=3
 import os
 import warnings
 import sys
@@ -89,8 +89,8 @@ mlflow.set_tracking_uri("http://localhost:5000")
 bd=bdStocks.getData()
 from mlflow.tracking import MlflowClient
 client = MlflowClient()
-column="netIncome"
-periodoIndice="3M"
+column="Adjusted_close"
+periodoIndice="1M"
 import math
 def print_run_info(r):
     
@@ -103,15 +103,16 @@ def print_run_info(r):
         print("tags: {}".format(tags))
 
 #%%
+MAX_RESULTS=1000
 infos=[]
-models=client.search_registered_models()
+models=client.search_registered_models(max_results=MAX_RESULTS)
 for model in models:
     array=model.name.split("_")
     caracteristicas=model.latest_versions[0]
     print((caracteristicas))
-    if int(caracteristicas.source.split("/")[2])==EXPERIMENT_ID:
-        infoCaso=pr.InfoCaso(array[0],array[1],caracteristicas.run_id,caracteristicas.version)
-    
-        infos.append(infoCaso)
-        client.delete_registered_model(model.name)
+    #if int(caracteristicas.source.split("/")[2])==EXPERIMENT_ID:
+    infoCaso=pr.InfoCaso(array[0],array[1],caracteristicas.run_id,caracteristicas.version)
+
+    infos.append(infoCaso)
+    client.delete_registered_model(model.name)
     

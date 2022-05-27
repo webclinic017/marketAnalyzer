@@ -37,8 +37,10 @@ import transformationsDataframes as tfataframe
 import configparser
 import transformations
 import transformationsDataframes
+from  transformationsDataframes import transformacionExponencialInversa
 import writer
 import modelosSARIMA
+import metricas
 from multiprocessing import Process
 config = configparser.ConfigParser()
 config.read('../../config.properties')
@@ -48,7 +50,7 @@ logger = logging.getLogger(__name__)
 tam_train=float(config.get('EntrenamientoARIMA', 'tam_train'))
 SCALE= True if config.get('Entrenamiento', 'scale')=="True" else False
 DIVISOR=1000000
-exchange="US"
+exchange="MC"
 columnas=["netIncome","totalRevenue","stock"]
 columnasPrecios=["Adjusted_close","stock"]
 tamMinimo=50
@@ -57,7 +59,7 @@ column2="Adjusted_close"
 periodoIndice="3M"
 experiment_id=2
 periodicidad=4
-comprobarEntrenado=True
+comprobarEntrenado=False
 from mlflow.tracking import MlflowClient
 mlflow.set_tracking_uri("http://localhost:5000")
 client = MlflowClient()
@@ -74,11 +76,29 @@ def realizarAnalisis(serie_train,serie_test,serie,stock,nas,minimo,transformar,D
     estCorr,estPcorr=SARIMA.estadisticosCorrelaciones(serie_train,diferenciacion,diferenciacionEstacional,periodicidad)
     print( diferenciacion,diferenciacionEstacional)
     modelos=SARIMA.reglas(serie_train,serie_test,estCorr,estPcorr,diferenciacion,diferenciacionEstacional,periodicidad)
-    modelos.sort(key=lambda t:t.aicTotal)
+    modelos.sort(key=lambda t:t.aicTrain)
+  
     if len(modelos)>0:
-        modelo=modelos[0]
-        dic={"ponderacion":ponderaciones[0],"numDatosTotales":len(serie),"numDatosNulos":nas,"transformTrasl":minimo,"transformExp":transformar,"transformScale":DIVISOR}
-        modelosSARIMA.añadirModelo(modelo,exchange+"_"+stock,column,experiment_id=experiment_id,**dic)
+        try:
+            modelo=modelos[0]
+            fitted_train=modelo.modelo.fittedvalues
+            fitted_test=modelo.modelo.extend(serie_test).fittedvalues
+            if transformar:
+                serie_train=transformacionExponencialInversa(serie_train,minimo)
+                serie_test=transformacionExponencialInversa(serie_test,minimo)
+                fitted_train=transformacionExponencialInversa(fitted_train,minimo)
+                fitted_test=transformacionExponencialInversa(fitted_test,minimo)
+            
+            mapetrain=metricas.MAPE(serie_train,fitted_train)
+            smapetrain=metricas.SMAPE(serie_train,fitted_train)
+            mapeTest=metricas.MAPE(serie_test,fitted_test)
+            smapeTest=metricas.SMAPE(serie_test,fitted_test)
+          
+            dic={"ponderacion":ponderaciones[0],"numDatosTotales":len(serie),"numDatosNulos":nas,"transformTrasl":minimo,"transformExp":transformar,"transformScale":DIVISOR,\
+                 "mapeTrain":mapetrain,"mapeTest":mapeTest,"smapeTrain":smapetrain,"smapeTest":smapeTest}
+            modelosSARIMA.añadirModelo(modelo,exchange+"_"+stock,column,experiment_id=experiment_id,**dic)
+        except Exception as e:
+            raise e
     return modelos
   
 def analizarFundamental(exchange):
@@ -115,6 +135,7 @@ def analizarFundamental(exchange):
                 #dataOriginal=data.copy()
                 #data3=(data3-data3.mean())/data3.std()
                 transformar=True
+                minimo=0
                 if transformar:
                     minimo=np.min(data)[0]
                     if minimo<0:
@@ -146,6 +167,7 @@ def analizarFundamental(exchange):
                 lim_train=int(tam*tam_train)
                 serie_train=serie[:lim_train]
                 serie_test=serie[lim_train:]
+            
                 print(serie.shape,nas)
                 print(data1.tail())
                 #print(serie_test)
@@ -153,21 +175,21 @@ def analizarFundamental(exchange):
                 #dicModelos[stock]=modelos
       
         except Exception as e:
-            continue
+           print(e)
     return dicModelos
         
 
-
-bd=bdStocks.getData()
-#precios=bd.getPrizesByExchange(exchange,columnas=columnasPrecios)
-dicModelos=analizarFundamental(exchange)
+if __name__=='__main__':
+    bd=bdStocks.getData()
+    #precios=bd.getPrizesByExchange(exchange,columnas=columnasPrecios)
+    dicModelos=analizarFundamental(exchange)
 #%%
-for stock,modelos in dicModelos.items():
-    for modelo in modelos:
-        print(modelo)
-        print(modelo.aicTotal)
-        u=modelo.modelo
-        print(u.specification)
-        print(u.params)
-        for e in u.params.index:
-            print(e,u.params.loc[e])
+    for stock,modelos in dicModelos.items():
+        for modelo in modelos:
+            print(modelo)
+            print(modelo.aicTotal)
+            u=modelo.modelo
+            print(u.specification)
+            print(u.params)
+            for e in u.params.index:
+                print(e,u.params.loc[e])

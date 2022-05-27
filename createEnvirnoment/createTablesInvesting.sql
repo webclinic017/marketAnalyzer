@@ -1,3 +1,5 @@
+
+--base de datos diferente de stocks
 use calendarios;
 show tables;
 create table calendarioEsperado(

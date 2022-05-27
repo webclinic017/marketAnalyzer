@@ -63,12 +63,12 @@ class getData:
             mydbStocks.commit()
             return [ e[0] for e in stocks]
        
-    def getDataByExchange(self,tipo:str, exchange: str, broker: str = None, bd: bool = False,columnas=None):
+    def getDataByExchange(self,tipo:str, exchange: str, broker: str = None, bd: bool = False,sector=None,columnas=None):
 
         import os
         if PERFORMANCE:
             timer = TimeMeasure()
-        if not bd:
+        if not bd and sector is None:
 
             if broker is None:
                 if tipo=="precios":
@@ -86,11 +86,23 @@ class getData:
            
 
         else:
-            if tipo=="precios":
+            params=(exchange,sector)
+            if tipo=="precios" and sector is None:
                 sql = "select * from {}_precios;".format(exchange)
-            elif tipo=="fundamental":
+            elif tipo=="fundamental" and sector is None:
                 sql = "select * from {}_fundamental;".format(exchange)
-            dataframe=self.__read_bd(sql)
+            elif tipo=="precios" and sector is not  None:
+                sql = "select * from {}_precios inner join (SELECT * FROM sectors where\
+    exchange=%s and sector=%s) as s on {}_precios.stock=s.stock;".format(exchange,exchange,sector,exchange)
+            elif tipo=="fundamental" and sector is not None:
+                sql = "select * from {}_fundamental inner join (SELECT * FROM sectors where\
+    exchange=%s and sector=%s) as s on {}_fundamental.stock=s.stock;".format(exchange,exchange)
+            if sector is None:
+                dataframe=self.__read_bd(sql)
+            else:
+                
+                dataframe=self.__read_bd_withParams(sql,params)
+        
             acceso="BD"
         if PERFORMANCE:
             writer.write(acceso+" access time to get "+tipo+" "+str(timer.getTime()),
@@ -98,6 +110,8 @@ class getData:
             writer.write("Object size ({} data)".format(tipo)+str(sys.getsizeof(dataframe) /
                      1000000)+" MB", log_dir_rendimiento)
         dataframe.rename_axis(index=["fecha"],inplace=True)
+        if "stock" in dataframe.columns:
+                   dataframe.set_index("stock",append=True,inplace=True)
         if columnas is not None:
             return dataframe.loc[:,columnas]
         return dataframe
@@ -131,6 +145,7 @@ class getData:
             writer.write("Object size ({} data)".format(tipo)+str(sys.getsizeof(dataframe) /
                      1000000)+" MB", log_dir_rendimiento)
         dataframe.rename_axis(index=["fecha"],inplace=True)
+        
         if columnas is not None:
             return dataframe.loc[:,columnas]
         return dataframe
@@ -161,6 +176,7 @@ class getData:
             dataframe.index = pd.to_datetime(dataframe["fecha"])
             dataframe.drop(["exchange", "fecha"], axis=1, inplace=True)
             dataframe = dataframe.drop_duplicates().sort_index(level=0, ascending=True)
+            dataframe=dataframe.loc[:,~dataframe.columns.duplicated()]
             mydbStocks.commit()
             return dataframe
     def getIndexPrizes(self,index):
@@ -174,11 +190,17 @@ class getData:
         dataframe.rename_axis(index=["fecha"],inplace=True)
         return dataframe
         
-    def getSectors(self,exchange):
+    def getSectors(self,exchange=None):
         if PERFORMANCE:
             timer = TimeMeasure()
-        sql="select stock,sector from sectors where exchange=%s"
-        mycursorStocks.execute(sql,(exchange,))
+        if exchange is not None:
+            sql="select stock,sector from sectors where exchange=%s"
+            mycursorStocks.execute(sql,(exchange,))
+        else:
+              sql='select concat(exchange,"_",stock) as stock,sector from sectors'
+              mycursorStocks.execute(sql)
+            
+        
         data=(mycursorStocks.fetchall())
         mydbStocks.commit()
         
@@ -186,7 +208,18 @@ class getData:
             writer.write("BD access time to sectors "+str(timer.getTime()),
                      log_dir_rendimiento)
         return dict(data)
-    
+    def getJustSectors(self,exchange):
+        if PERFORMANCE:
+            timer = TimeMeasure()
+        sql="select distinct(sector) from sectors where exchange=%s"
+        mycursorStocks.execute(sql,(exchange,))
+        data=(mycursorStocks.fetchall())
+        mydbStocks.commit()
+        
+        if PERFORMANCE:
+            writer.write("BD access time to sectors "+str(timer.getTime()),
+                     log_dir_rendimiento)
+        return [e[0] for e in data]
         
     def getDescriptions(self,exchange):
         if PERFORMANCE:
@@ -200,6 +233,26 @@ class getData:
             writer.write("BD access time to sectors "+str(timer.getTime()),
                      log_dir_rendimiento)
         return dict(data)
+    def executeQuery(self,sql,params=None):
+          if params is  None:
+            mycursorStocks.execute(sql)
+          else:
+              mycursorStocks.execute(sql,params)
+             
+          data=(mycursorStocks.fetchall())
+          mydbStocks.commit()
+          return data
+    def executeQueryDataFrame(self,sql,params=None):
+          if params is  None:
+            mycursorStocks.execute(sql)
+          else:
+              mycursorStocks.execute(sql,params)
+             
+          data=pd.DataFrame(mycursorStocks.fetchall())
+          data.columns = mycursorStocks.column_names
+          mydbStocks.commit()
+          return data
+        
     def obtenerStocksStrategy(self,filt,tipo,namesOnly=False,columnas=None):
         broker=None
         stocks=[]
@@ -245,8 +298,23 @@ class getData:
             return dataframe,stocks
         else:
             return stocks
+    def getPreciosSectores(self):
+        sql="select * from preciosPorSectores"
+        mycursorStocks.execute(sql)
+        data=pd.DataFrame(mycursorStocks.fetchall())
+        data.columns = mycursorStocks.column_names
+        data.set_index(["exchange","sector","fecha"],inplace=True)
+        
+        mydbStocks.commit()
+        return data
+    
+    def delete(self,statement,params):
+             mycursorStocks.execute(statement,params)
+             mydbStocks.commit()
+    def execute(self,statement,params):
+             mycursorStocks.execute(statement,params)
+             mydbStocks.commit()
 if __name__=="__main__":
         
     bd=  getData()
-    filt={"broker":"degiro","exchanges":["US"],"sector":["Healthcare"]}
-    dataframe=bd.obtenerStocksStrategy(filt,"fundamental",columnas=["netIncome"])
+    data=bd.getPreciosSectores()

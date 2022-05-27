@@ -3,19 +3,17 @@ show tables;
 create table exchanges(
     code varchar(100) PRIMARY KEY,
     name varchar(100),
+    country varchar(100),
     currency varchar(100),
     operatingMIC varchar(100)
 
 );
-create table proximosResultados(
-    stock varchar(100),
-    exchange varchar(100),
-    fecha date
+--las otras tabla se crean desde python: forex, precios y fundamentals (se crean primero las de precios y sobre ellas las de fundamentals)
 
-);
-#ALTER TABLE stocks CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-alter table exchanges add column country varchar(100)  after name;
-alter table stocks drop column sector;
+
+
+--la siguiente linea es necesaria
+--ALTER TABLE stocks CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 create table stocks(
     code varchar(100),
     name varchar(1000),
@@ -26,19 +24,6 @@ create table stocks(
     Currency varchar(100),
     PRIMARY KEY (code,exchange)
 
-
-);
-create table precios(
-    stock varchar(100),
-    exchange varchar(100),
-    close double,
-    open double,
-    adjusted_close double,
-    high double,
-    low double,
-    volume double,
-    fecha date,
-    PRIMARY KEY (stock,exchange,fecha)
 
 );
 create table degiro(
@@ -81,14 +66,6 @@ create table descriptions(
   description varchar(10000)
 
 );
-create table lastPrizesUpdate(
-    stock varchar (100),
-    exchange varchar(100),
-    fecha date,
-    PRIMARY KEY (stock,exchange)
-
-
-);
 create table calendarioResultados(
 
     report_date date,
@@ -99,6 +76,67 @@ create table calendarioResultados(
     estimate double
 
 );
+-- auxiliar, datos procesados
+CREATE table preciosPorSectores(
+exchange varchar(100),
+sector varchar(100),
+fecha datetime,
+precio double
+
+);
+
+-- auxiliar, datos procesados
+create table ratios_results(
+    stock varchar(100),
+    exchange varchar(100),
+    fecha date,
+    netIncome double,
+    totalAssets double,
+    totalLiab double,
+    totalCurrentLiabilities double,
+    totalStockholderEquity double,
+    commonStockSharesOutstanding double,
+    netDebt double,
+    freeCashFlow double,
+    totalRevenue double,
+    ebit double,
+    ebitda double,
+    adjusted_close double,
+    per double,
+    earnings double,
+    report_date date,
+    earnings_per double,
+    prizebook double,
+    solvenciaLargo double,
+    solvenciaCorto double,
+    liquidez double
+        );
+
+create table exchangeIndice(
+    exchange varchar(100),
+    indice varchar(100)
+
+);
+insert into exchangeIndice values('US','DOW'),
+                                  ('US','NASDAQ100'),
+                                  ('PA','CAC40'),
+                                  ('TO','TSX60'),
+                                  ('US','SP500'),
+                                  ('MC','IBEX35'),
+                                  ('XETRA','DAX'),
+                                  ('LSE','FTSE100Index'),
+                                  ('MI','FTSEMIB');
+                                  
+--esta tabla se crea en Python pero se modifica asi
+ALTER TABLE highlights
+MODIFY  MostRecentQuarter date;
+
+
+--ya no se usa
+create table updated(
+    fecha date,
+    stock varchar(100),
+    exchange varchar(100));
 insert into indice_exchange values('SP500','US');
 insert into indice_exchange values('NASDAQ100','US');
 insert into indice_exchange values('DAX','XETRA');
@@ -113,5 +151,24 @@ insert into indice_exchange values('CAC40','PA');
 insert into indice_exchange values('TSX60','NEO');
 insert into indice_exchange values('TSX60','TO');
 insert into indice_exchange values('TSX60','VX');
+--ya no se usa
+create table proximosResultados(
+    stock varchar(100),
+    exchange varchar(100),
+    fecha date
+
+);
+--ya no se usa
+create table lastPrizesUpdate(
+    stock varchar (100),
+    exchange varchar(100),
+    fecha date,
+    PRIMARY KEY (stock,exchange)
+
+
+);
+
+
+
 
 

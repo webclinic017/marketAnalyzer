@@ -98,7 +98,7 @@ def plot_forecast(serie,dataframePred,fitted,title=None,scale=False,fileName=Non
     if fileName is not None:
         plt.savefig(fileName)
    
-def plot_forecast_dataframe(dataframePred,title=None,scale=False,fileName=None,extraInfo=None,*args,):
+def plot_forecast_dataframe(dataframePred,title=None,scale=False,fileName=None,extraInfo=None,puntos=None,*args,):
     
     fig=plt.figure(figsize=FIG_SIZE)
     plt.grid(True)
@@ -110,7 +110,11 @@ def plot_forecast_dataframe(dataframePred,title=None,scale=False,fileName=None,e
 
     for k in dataframePred.columns:
         ax1.plot(dataframePred.index,dataframePred.loc[:,k],marker="o",label=k)
-    
+    if puntos is not None:
+        for punto in puntos:
+            #print(punto)
+            ax1.plot(punto[0],punto[1],"->",markersize=14)
+            
    
     ax1.legend()
     if title is not None:

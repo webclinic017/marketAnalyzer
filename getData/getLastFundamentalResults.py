@@ -68,48 +68,38 @@ mydb = mysql.connector.connect(
     password=PASSWORD, database=DATABASE2
 )
 mycursorStocks = mydb.cursor()
-fecha1 = dt.date.today()-timedelta(days=DAYS_UPDATE_RESULTS)
-fecha2 = dt.date.today()+timedelta(days=DAYS_UPDATE_RESULTS)
+saveStock =   True if config.get('DatabaseStocksSection', "saveStockFundamentalsWhenUpdatingResults")=="True" else False
+
+fecha1 = dt.datetime.today()-timedelta(days=200)
+fecha2 = dt.date.today()+timedelta(days=30)
+
+time_grid = list(pd.date_range(start=fecha1, end=fecha2, freq='10D').to_pydatetime())
+if time_grid[-1]!=fecha2:
+    time_grid.append(fecha2)
+
+    
+    
 print("Fecha desde la que se actualizan resultados %s"%fecha1)
 sql="delete from calendarioResultados where report_date>=%s"
-#mycursorStocks.execute(sql,(fecha1,))
-#mydb.commit()
-saveStock =   True if config.get('DatabaseStocksSection', "saveStockFundamentalsWhenUpdatingResults")=="True" else False
-time_grid = pd.date_range(start=fecha1, end=fecha2, freq='10D').to_pydatetime()
-print("Numero de rangos de fechas %s" % (len(time_grid)-1))
+mycursorStocks.execute(sql,(fecha1,))
+mydb.commit()
 for i in range(1, len(time_grid)):
-  
-    fecha1 = dt.datetime.strftime(time_grid[i-1], "%Y-%m-%d")
-    fecha2 = dt.datetime.strftime(time_grid[i]-timedelta(days=1), "%Y-%m-%d")
-    print("Fecha inicial del rango %s %s" %(i, fecha1))
-    print("Fecha final del rango %s %s" %(i, fecha2))
-    resp = getResults(fecha1, fecha2)
-    dataframe = pd.DataFrame(resp["earnings"]).loc[:, [
-        "code", "report_date", "date", "actual", "estimate"]]
-    dataframe["stock"] = dataframe["code"].transform(lambda x: x.split(".")[0])
-    dataframe["exchange"] = dataframe["code"].transform(
-        lambda x: x.split(".")[1])
-    dataframe.drop("code", inplace=True, axis=1)
-    # dataframe=dataframe[dataframe["actual"].notna()]
+    if (time_grid[i-1]!=time_grid[i]):
+        fecha1 = dt.datetime.strftime(time_grid[i-1], "%Y-%m-%d")
+        fecha2 = dt.datetime.strftime(time_grid[i]-timedelta(days=1), "%Y-%m-%d")
+        print("Fecha inicial del rango %s %s" %(i, fecha1))
+        print("Fecha final del rango %s %s" %(i, fecha2))
+        resp = getResults(fecha1, fecha2)
+        dataframe = pd.DataFrame(resp["earnings"]).loc[:, [
+            "code", "report_date", "date", "actual", "estimate"]]
+        dataframe["stock"] = dataframe["code"].transform(lambda x: x.split(".")[0])
+        dataframe["exchange"] = dataframe["code"].transform(
+            lambda x: x.split(".")[1])
+        dataframe.drop("code", inplace=True, axis=1)
+        # dataframe=dataframe[dataframe["actual"].notna()]
+    
+        print("Número de resultados  en este rango %s" % len(dataframe))
+        dataframe.to_sql("calendarioResultados", engine,
+                         if_exists="append", chunksize=1000, index=False)
+        
 
-    print("Número de resultados  en este rango %s" % len(dataframe))
-    dataframe.to_sql("calendarioResultados", engine,
-                     if_exists="append", chunksize=1000, index=False)
-    l = 0
-    if saveStock:
-        for i, values in dataframe.iterrows():
-            try:
-                l += 1
-              
-                if not np.isnan(values["actual"]) and dt.datetime.strptime(values["report_date"], "%Y-%m-%d") <= dt.datetime.today():
-                    with HiddenPrints():
-                        
-                        exchange = values["exchange"]
-                        stock = values["stock"]
-                        saveStocks.comprobarSiExisteExchange(exchange)
-                        saveStocks.cargarPrecios(stock, exchange)
-                        savePrices.comprobarSiExisteExchange(exchange)
-                        savePrices.cargarPrecios(stock, exchange)
-                       
-            except Exception as e:
-                continue

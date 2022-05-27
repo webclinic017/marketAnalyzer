@@ -44,6 +44,7 @@ PORT = config.get('DatabaseStocksSection', 'database_port')
 DATABASE2 = config.get('DatabaseStocksSection', 'database_name')
 TABLE2 = config.get('DatabaseStocksSection', 'database_table_name')
 DAYS_UPDATE = int(config.get('DatabaseStocksSection', 'days_update_fundamental'))
+DAYS_UPDATE = -1
 data_dir = config.get('DatabaseStocksSection', 'data_dir')
 database_username = USER
 database_password = PASSWORD
@@ -69,24 +70,7 @@ exchanges = dataframe
 def init():
      return mycursorStocks,mydbStocks,data_dir
 
-def guardarDatosEnBD(precios, dataframe1, fechak, exchange, stock):
 
-    an_array = np.full((len((precios))), exchange)
-    precios["exchange"] = an_array
-    an_array = np.full((len((precios))), stock)
-    precios["stock"] = an_array
-    precios.index.names = ["fecha"]
-    precios.to_sql(exchange+"_fundamental", engine,
-                   if_exists="append", chunksize=1000)
-
-    if dataframe1.empty:
-        sql = "insert into  lastPrizesUpdate values(%s,%s,%s)"
-        mycursorStocks.execute(sql, (stock, exchange, dt.datetime.today()))
-    else:
-        sql = "update lastPrizesUpdate set fecha=%s  where stock=%s and exchange=%s"
-        mycursorStocks.execute(sql, (dt.date.today(), stock, exchange))
-
-    mydbStocks.commit()
 def UpdateDatosEnBD(precios, exchange, stock):
 
     an_array = np.full((len((precios))), exchange)
@@ -101,83 +85,7 @@ def UpdateDatosEnBD(precios, exchange, stock):
 
     mydbStocks.commit()
 
-def cargarPrecios(stock, exchange):
-    sql = "select fecha from  lastPrizesUpdate  where stock=%s and exchange=%s"
-    mycursorStocks.execute(sql, (stock, exchange))
-    dataframe2 = pd.DataFrame(mycursorStocks.fetchall())
-    fechak = None
-    mydbStocks.commit()
-    if not dataframe2.empty:
-        fechak = dataframe2.loc[0, 0]
-    else:
-        print("Stock %s_%s aun no guardado"%(exchange,stock))
-        # print(fechak)
-    # cambiar +timedelta por -timedelta
-    print(fechak)
-    if dataframe2.empty or fechak < dt.date.today()-timedelta(days=DAYS_UPDATE):
-        print("Stock %s_%s no actualizado"%(exchange,stock))
 
-        name_archivo = directorioALMACENAMIENTO+exchange+"/"+stock+".csv"
-        fecha2 = None
-        prize_df = None
-        if os.path.isfile(name_archivo):
-            prize_df = pd.read_csv(name_archivo, index_col=0)
-            if not prize_df.empty:
-                prize_df.index = pd.to_datetime(prize_df.index)
-                fecha2 = prize_df.index[-1]
-                fecha2 = dt.datetime(fecha2.year, fecha2.month, fecha2.day)
-
-        sql = "select fecha from  {}_fundamental where stock=%s order by fecha desc limit 1".format(
-            exchange)
-        mycursorStocks.execute(sql, (stock,))
-        fecha = pd.DataFrame(mycursorStocks.fetchone())
-        mydbStocks.commit()
-
-        if fecha.empty:
-            fecha = None
-
-        precios = getFundamentals(
-            stock+"."+exchange)
-        if not precios is None:
-            if "currency_symbol" in precios.columns:
-                precios.drop(labels="currency_symbol", inplace=True, axis=1)
-            precios = precios.dropna(axis=0,
-                                     how='all')
-
-            if not fecha is None:
-                fecha = fecha.iloc[0, 0]
-
-                fecha = dt.datetime(fecha.year, fecha.month, fecha.day)
-
-            if precios is not None:
-                precios.index = pd.to_datetime(precios.index)
-
-                if not precios.empty:
-                    if not fecha2 is None:
-                        precios1 = precios.loc[precios.index > fecha2]
-
-                        prize_df = pd.concat([prize_df, precios1])
-                        prize_df.sort_index(ascending=True, inplace=True)
-                    else:
-                        prize_df = precios
-                        prize_df.sort_index(ascending=True, inplace=True)
-
-                    prize_df.to_csv(name_archivo)
-                    if not fecha is None:
-                        precios1 = precios.loc[precios.index > fecha]
-
-                    else:
-                        precios1 = precios
-
-                    guardarDatosEnBD(precios1, dataframe2,
-                                     fechak, exchange, stock)
-                if not fecha is None and not fecha2 is None and PRINT:
-                    print("Fecha de BD %s" % fecha)
-                    print("Fecha de csv %s" % fecha2)
-
-    else:
-
-        print("Stock %s_%s ya actualizado"%(exchange,stock))
 
 
 def comprobarSiExisteExchange(exchange):
