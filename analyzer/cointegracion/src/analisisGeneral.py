@@ -2,7 +2,7 @@ import os
 os.chdir("../")
 from database import dabase_functions
 from config import load_config
-config = load_config.config()
+
 from functions import macro
 from plots import plots_iniciales
 import pandas as pd
@@ -21,9 +21,10 @@ def get_info_indice():
 #se pretende analizar las correlaciones de los precios con diferentes variables
 # se pretende analizar el comportamiento de los precios en periodos de crecimiento y decrecimiento
 if __name__=="__main__":
-
+    config = load_config.config()
     indices = config["macro"]["indices"]
-    macro_us=dabase_functions.get_multiple_macro_data("united states", shift=0)
+    macro_us=dabase_functions.get_multiple_macro_data("united states", shift=0
+
     for indice in list(indices):
 
         country = config["macro"]["indice_country"][indice]

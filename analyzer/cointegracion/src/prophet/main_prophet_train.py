@@ -17,7 +17,8 @@ from utils import metricas, work_dataframes
 from datetime import timedelta
 from database import dabase_functions
 from functions import estacionaridadYCointegracion
-
+from prophet.plot import plot_cross_validation_metric
+import matplotlib.pyplot as plt
 pd.set_option("display.max_columns", 500)
 pd.set_option("display.max_rows", 500)
 # Press the green button in the gutter to run the script.
@@ -27,11 +28,10 @@ if __name__ == '__main__':
     random.seed(dt.datetime.now().minute)
     config = load_config.config()
     feature = "ibex35"
-    variables_externas = []
+    variables_externas = ["nasdaq", "sp500"]
     data = pd.read_csv("data/raw/energies/dayly_energy.csv", index_col=0)  # datos concretos
 
     data = dabase_functions.obtener_multiples_series("indices", "D", *["ibex35", "nasdaq", "sp500"])
-    data = data - data.min()
 
     data.index = pd.to_datetime(data.index)
 
@@ -76,7 +76,7 @@ if __name__ == '__main__':
 
     columnas_dataframe = ["ds", "y"] + variables_externas
     if config["prophet"]["usar_macro"]:
-        columnas_dataframe = columnas_dataframe + +variables_macro_externas
+        columnas_dataframe = columnas_dataframe + variables_macro_externas
 
     data = data.loc[:, columnas_dataframe]
 
@@ -115,12 +115,15 @@ if __name__ == '__main__':
     future_train = df_train.drop("y", axis=1)
     forecast_train = model.predict(future_train)
     forecast_train["y"] = df_train.reset_index()["y"]
+    print("METRICAS usando media {}".format(metricas.all_metricas(forecast_train.y,np.ones(len(forecast_train.y))*np.mean(forecast_train.y))))
     print("METRICAS entrenamiento {}".format(metricas.all_metricas(forecast_train.y, forecast_train.yhat)))
     print("METRICAS tendencia entrenamiento {}".format(metricas.all_metricas(forecast_train.y, forecast_train.trend)))
     print("METRICAS estacioanalidad anual entrenamiento {}".format(
         metricas.all_metricas(forecast_train.y, forecast_train.yearly)))
     print("METRICAS terminos aditivos entrenamiento {}".format(
         metricas.all_metricas(forecast_train.y, forecast_train.additive_terms)))
+
+    print("METRICAS sin usar estacionalidad anual en entrenamiento {}".format(metricas.all_metricas(forecast_train.y, forecast_train.yhat-forecast_train.yearly)))
     if len(df_train.columns) > 2:
         print("SMAPE terminos aditivos extra regressors entrenamiento {}".format(
             metricas.smape(forecast_train.extra_regressors_additive, forecast_train.additive_terms)))
@@ -157,6 +160,11 @@ if __name__ == '__main__':
                 print('METRICAS desde fecha {} hasta fecha: {}, {}'.format(ind, forecast_full.ds.values[-1], metrics))
 
     # metricas en cross validation y validation test
+
+    fig = plot_cross_validation_metric(df_cv, metric='mape')
+    fig = plot_cross_validation_metric(df_cv, metric='smape')
+    fig = plot_cross_validation_metric(df_cv, metric='rmse')
+    plt.show()
     print("METRICAS medio en cross validation: rmse={}, smape={}, mape={},".format(df2["rmse"].mean(),
                                                                                    df2["smape"].mean(),
                                                                                    df2["mape"].mean()))
