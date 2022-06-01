@@ -1,0 +1,118 @@
+bd:
+  host: localhost
+  user: usuario1
+  password: password
+  port: 33062
+  database: stocks
+  database_forex: forex
+  database_commodities: forex
+  database_otros_activos: forex
+  database_calendarios: calendarios
+series_temporales:
+  fecha_minima: "2010-01-01"
+  fecha_largo: "2010-01-01"
+  fecha_medio: "2016-01-01"
+  fecha_corto: "2022-01-01"
+  fecha_dia: "2022-03-01"
+  fecha_sep: "2021-06-01"
+
+factores_de_correccion_monetarios: {"LSE":{"adjusted_close":0.01222}}
+reportes:
+  analisis_general: "reportes/analisis_general/"
+
+cambio_unidades:
+  factores_moneda: {"united kingdom":{"adjusted_close":0.0119}}
+
+
+
+
+
+macro:
+  country_exchange: { "united states": [ "US" ],
+                      "germany": [ "XETRA", "F", "BE", "DU" ],  "spain": [ "MC" ],
+                      "united kingdom": [ "LSE" ], "canada": [ "TO" ],
+                      "france": [ "PA" ]
+                      }
+
+  exchange_other_name: {"US":["NYSE","NASDAQ"]}
+  indices: ["SP500","DAX30","IBEX35","FTSE100","SPTSX","NASDAQ","CAC40"]
+  materias_primas: ["crude oil wti", "gold"]
+  indice_country: {"DOW":"united states", "SP500":"united states",
+                  "DAX30":"germany", "IBEX35":"spain",
+                  "FTSE100": "united kingdom","SPTSX":"canada",
+                  "NASDAQ":"united states","CAC40":"france",
+                  }
+  country_indices: {"united states": ["SP500", "NASDAQ" ],
+                    "germany": ["DAX30"],  "spain": ["IBEX35"],
+                    "united kingdom":["FTSE100"], "canada":["SPTSX"],
+                    "france":["CAC40"]
+                  }
+  country_forex:  {"united states": ["EUR_USD","GBP_USD" ],
+                    "germany": ["EUR_USD","EUR_GBP"],  "spain": ["EUR_USD","EUR_GBP"],
+                    "united kingdom":["GBP_USD","EUR_GBP"], "canada":["EUR_CAD","GBP_CAD"],
+                    "france":["EUR_USD","EUR_GBP"]
+                  }
+
+  eventos_fundamentales: { "united states":['%Factory orders (MOM)%', '%ISM Non-Manufacturing PMI%',
+                                '%ISM Manufacturing PMI%', '%Core CPI (MoM)%',
+                                '%Core CPI (yoy)%', '%Industrial Production (MoM)%',
+                                '%Core Retail Sales (MoM)%','%GDP (QoQ)%',
+                                '%Building Permits  (%)','%Fed Interest Rate Decision%',
+                                'Unemployment Rate%'],
+                          "united kingdom":['%BoE Interest Rate Decision%','%Manufacturing PMI%',
+                            '%Core Retail Sales (MoM)%','%Core Retail Sales (YoY)%',
+                            '%CPI (MoM)%','%Core CPI (YoY)%','%Industrial Production (MoM)%',
+                            '%Industrial Production (YoY)%','%Unemployment Rate%','%GDP (QoQ)%'],
+                          "spain":['%Spanish CPI (YoY)%','%Spanish CPI (MoM)%',
+                                    '%Spanish Industrial Production (YoY)%','%Spanish Retail Sales (YoY)%',
+                                   '%Spanish Unemployment Rate%','%Spanish Manufacturing PMI%',
+                                   '%Spanish Services PMI%','%Spanish GDP (QoQ)%'
+                                  ],
+                          "france":[],
+                          "canada":[],
+                          "germany": []
+                        }
+
+prophet:
+  number_combs: 20
+  min_tam_train: 100
+  cross_validation: True
+  variables_externas: False
+  usar_macro: False # si usan las variables macro o no
+
+  feature_macro: "Building Permits" #feature macro a predecir
+  country_usado: "united states" #pais del que se pillan las macro
+  variables_macro_fijas: { "united states": [ "Core CPI (yoy)","Fed Interest Rate Decision", #variales macro para cada pais
+                                              "EUR_USD","SP500","NASDAQ" ],
+                           "germany": [ "EUR_USD","SP500","NASDAQ", "DAX30",
+                           ],
+                           "spain": [ "EUR_USD","SP500","NASDAQ", "DAX30", "IBEX35",
+                            '%Spanish CPI (YoY)%','%Spanish CPI (MoM)%', '%Spanish Industrial Production (YoY)%',
+                            '%Spanish Retail Sales (YoY)%' ,  '%Spanish Unemployment Rate%','%Spanish Manufacturing PMI%',
+                                   '%Spanish Services PMI%','%Spanish GDP (QoQ)%' ],
+
+                        }
+  predict_macro: False #si se predice una variable macro o no
+  param_grid:
+     'changepoint_prior_scale': [ 0.01, 0.1, 0.05, 0.5 ]
+     'seasonality_prior_scale': [ 0.01, 0.1, 1,5, 10,15,20 ]
+     "monthly_seasonality": [ True, False ]
+     "use_holidays": [ False ]
+     "oil": [ True, False ]
+     "monthly_N": [ 3 ]
+     "yearly_N": [ 10 ]
+     "weekly_N": [ 3 ]
+  cutoffs: ["2008-01-01","2010-02-01","2011-07-01",
+            "2013-05-01","2015-04-01","2015-09-01",
+            "2018-01-01","2018-11-01","2019-01-01",
+            "2020-05-01", "2021-02-01","2021-12-01"]
+  use_cutoffs: False
+  period: "300 days" #periodo para el cross validatin
+  horizon: "300 days" #horizonte para el cross validation
+  freq: "D" #frecuencia, para el resample del dataframe
+  params_default: {"monthly_seasonality":False, "use_holidays":False,'changepoint_prior_scale':0.05,'seasonality_prior_scale':10,
+                   "monthly_N": 3, "yearly_N": 10, "weekly_N":  3}
+
+  variables_externas_fijas: ["nasdaq","spt500"] #variables exxternas no macro
+
+
