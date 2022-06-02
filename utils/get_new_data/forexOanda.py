@@ -1,11 +1,13 @@
 import configparser
 import datetime as dt
+import os
 from datetime import timedelta
+
 import mysql.connector
 import pandas as pd
 import sqlalchemy
 import v20
-import os
+
 os.chdir("../../")
 config = configparser.ConfigParser()
 config.read('config/config.properties')

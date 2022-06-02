@@ -65,7 +65,6 @@ pip install -r requirements.txt
 * [Python]
 * [Docker]
 * [Apache Superser]
-* [MLflow]
 
 
 
