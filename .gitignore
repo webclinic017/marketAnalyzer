@@ -1,6 +1,8 @@
 .idea/**
 **/.idea/**
-**/config.properties
+config/config_key.properties
+
+**/superset/**
 **/logs/*.txt
 exchanges_index.json
 getData/__pycache__
@@ -19,6 +21,8 @@ savedModels/
 **/plots
 **/resultados
 **/backup.sql
+**/backup_market_data.sql
+**/backup_stocks.sql
 **/*.csv
 **/modelos/**
 **/plotsPrecios/**

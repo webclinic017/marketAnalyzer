@@ -3,11 +3,10 @@ import os
 os.chdir("../")
 from config import load_config
 config = load_config.config()
-from database import dabase_functions
 
 import json
 
-from database import  dabase_functions
+from utils.database import  database_functions,bd_handler
 def obtener_fechas_crecimiento_decrecimiento(serie,nombre,diccionarioFechas):
     diccionarioFechas[nombre]={"mucho_crecimiento":[],"crecimiento":[],
                                    "decrecimiento":[],"mucho_decrecimiento":[]}
@@ -25,9 +24,10 @@ def obtener_fechas_crecimiento_decrecimiento(serie,nombre,diccionarioFechas):
 
 
 if __name__=="__main__":
+    bd=bd_handler.bd_handler("market_data")
     diccionarioFechas = {}
     indices = config["macro"]["indices"]
-    macro_us = dabase_functions.get_multiple_macro_data("united states", shift=0)
+    macro_us = database_functions.get_multiple_macro_data("united states", shift=0,bd=bd)
     for indice in list(indices):
         diccionarioFechas[indice]={"mucho_crecimiento":[],"crecimiento":[],
                                    "decrecimiento":[],"mucho_decrecimiento":[]}
@@ -37,8 +37,8 @@ if __name__=="__main__":
 
 
         try:
-            serie = dabase_functions.get_series_activos_diferentes_de_acciones(config["macro"]["indice_country"][indice], indice, "index",
-                                                      "2QS", indice)
+            serie =database_functions.get_series_activos_diferentes_de_acciones(config["macro"]["indice_country"][indice], indice, "index",
+                                                      "2QS", indice,bd=bd)
             print(indice, country, serie.tail())
             serie = serie.pct_change(1).dropna()
             obtener_fechas_crecimiento_decrecimiento(serie, indice, diccionarioFechas)

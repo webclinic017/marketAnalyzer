@@ -13,12 +13,12 @@ from io import StringIO
 import datetime
 import configparser
 config = configparser.ConfigParser()
-config.read('config/config.properties')
+config.read('config/config_key.properties')
 pd.options.mode.chained_assignment = None
-api_token =config.get('EOD_SECTION', 'api_key')
+api_token =config.get('EOD', 'api_key')
 client = EodHistoricalData(api_token)
 
-def getResults(fecha1,fecha2):
+def get_results(fecha1, fecha2):
     
     
     resp = client.get_calendar_earnings(from_=fecha1, to=fecha2)

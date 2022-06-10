@@ -10,9 +10,9 @@ import configparser
 import pandas as pd
 import sys
 config = configparser.ConfigParser()
-config.read('config/config.properties')
+config.read('config/config_key.properties')
 pd.options.mode.chained_assignment = None
-api_token =config.get('EOD_SECTION', 'api_key')
+api_token =config.get('EOD', 'api_key')
 client = EodHistoricalData(api_token)
 import pandas as pd
 from functools import reduce
@@ -27,8 +27,4 @@ def getHighLights(ticker):
     """
     
     resp = client.get_fundamental_equity(ticker, filter_='Highlights')
-    
-    #resp= pd.DataFrame.from_dict(resp,orient="index")
-    #data=resp.transpose()
-    #data.index=[dt.datetime.today()]
     return resp

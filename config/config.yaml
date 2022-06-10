@@ -3,11 +3,8 @@ bd:
   user: usuario1
   password: password
   port: 33062
-  database: stocks
-  database_forex: forex
-  database_commodities: forex
-  database_otros_activos: forex
-  database_calendarios: calendarios
+  database_stocks: stocks
+  database_market_data: market_data
 series_temporales:
   fecha_minima: "2010-01-01"
   fecha_largo: "2010-01-01"
@@ -34,23 +31,24 @@ macro:
                       "france": [ "PA" ]
                       }
 
-  exchange_other_name: {"US":["NYSE","NASDAQ"]}
-  indices: ["SP500","DAX30","IBEX35","FTSE100","SPTSX","NASDAQ","CAC40"]
+
+
+  indices: ["S&P 500","DAX","IBEX 35","FTSE 100","S&P/TSX 60","NASDAQ","CAC 40"]
   materias_primas: ["crude oil wti", "gold"]
-  indice_country: {"DOW":"united states", "SP500":"united states",
-                  "DAX30":"germany", "IBEX35":"spain",
-                  "FTSE100": "united kingdom","SPTSX":"canada",
-                  "NASDAQ":"united states","CAC40":"france",
+  indice_country: {"DOW":"united states", "S&P 500":"united states",
+                  "DAX":"germany", "IBEX 35":"spain",
+                  "FTSE 100": "united kingdom","S&P/TSX 60":"canada",
+                  "NASDAQ":"united states","CAC 40":"france",
                   }
-  country_indices: {"united states": ["SP500", "NASDAQ" ],
-                    "germany": ["DAX30"],  "spain": ["IBEX35"],
-                    "united kingdom":["FTSE100"], "canada":["SPTSX"],
-                    "france":["CAC40"]
+  country_indices: {"united states": ["S&P 500", "NASDAQ" ],
+                    "germany": ["DAX"],  "spain": ["IBEX 35"],
+                    "united kingdom":["FTSE 100"], "canada":["S&P/TSX 60"],
+                    "france":["CAC 40"]
                   }
-  country_forex:  {"united states": ["EUR_USD","GBP_USD" ],
-                    "germany": ["EUR_USD","EUR_GBP"],  "spain": ["EUR_USD","EUR_GBP"],
-                    "united kingdom":["GBP_USD","EUR_GBP"], "canada":["EUR_CAD","GBP_CAD"],
-                    "france":["EUR_USD","EUR_GBP"]
+  country_forex:  {"united states": ["EUR/USD","GBP/USD" ],
+                    "germany": ["EUR/USD","EUR/GBP"],  "spain": ["EUR/USD","EUR/GBP"],
+                    "united kingdom":["GBP/USD","EUR/GBP"], "canada":["EUR/CAD","GBP/CAD"],
+                    "france":["EUR/USD","EUR/GBP"]
                   }
 
   eventos_fundamentales: { "united states":['%Factory orders (MOM)%', '%ISM Non-Manufacturing PMI%',
@@ -116,3 +114,13 @@ prophet:
   variables_externas_fijas: ["nasdaq","spt500"] #variables exxternas no macro
 
 
+superset:
+  lista_paises: ["UNITED STATES","CHINA", "JAPAN",
+                              "RUSSIA", "SPAIN","GERMANY","ITALY",
+                              "FRANCE", "UNITED KINGDOM", "AUSTRALIA", "EURO ZONE"]
+  list_other_equities: ["market_data.forex", "market_data.crypto", "market_data.commodities"]
+  list_events: ["cpi (mom)", "interest rate decision", "retail sales (yoy)", "retail sales (mom)",
+              "industrial production (yoy)", "industrial production (mom)", "factory orders (mom)","factory orders (yoy)",
+                "building permits (mom)","building permits (yoy)",
+              "manufacturing pmi", "services pmi", "gdp (YOY)", "gdp (qoq)", "unemployment rate"]
+  title_ref_macro: "UNITED STATES MACRO"

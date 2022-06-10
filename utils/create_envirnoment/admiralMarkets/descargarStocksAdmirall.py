@@ -15,7 +15,7 @@ import configparser
 import MetaTrader5 as mt5
 pd.options.mode.chained_assignment = None
 config = configparser.ConfigParser()
-config.read('config/config.properties')
+config.read('config/config_key.properties')
 accountNumber =int( config.get('ADMIRAL_MARKETS', 'account_number'))
 password = config.get('ADMIRAL_MARKETS', 'password')
 

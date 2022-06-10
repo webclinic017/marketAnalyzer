@@ -1,23 +1,15 @@
 import os
 os.chdir("../")
-from database import bd_handler
 
-
-import pandas as pd
 from config import load_config
 
 config = load_config.config()
-from functions import estacionaridadYCointegracion
-import datetime as dt
-from utils import work_dataframes
 from plots import plots_iniciales
-import pandas as pd
-from plots import plots_iniciales
-from functions import macro
+from utils.database import bd_handler,database_functions
 if __name__ == "__main__":
     #analisis de los seleccionados para energias
-
-    data_macro=macro.get_data("united states")
+    bd_market_data=bd_handler.bd_handler("market_data")
+    data_macro=database_functions.get_multiple_macro_data("united states",0,bd_market_data)
     data_macro=data_macro.fillna(method="ffill")
     media=data_macro.mean()
     desv=data_macro.std()

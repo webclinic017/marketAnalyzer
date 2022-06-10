@@ -7,7 +7,7 @@ pd.options.mode.chained_assignment = None
 
 if __name__=="__main__":
     config = configparser.ConfigParser()
-    config.read('config/config.properties')
+    config.read('config/config_key.properties')
 
     section='DEGIRO_SECTION'
     guia_dir= config.get(section, 'guia_dir')

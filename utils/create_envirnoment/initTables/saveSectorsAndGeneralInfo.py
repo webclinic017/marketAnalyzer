@@ -16,7 +16,7 @@ from eod import  EodHistoricalData
 import configparser
 if __name__ == "__main__":
     config = configparser.ConfigParser()
-    config.read('config/config.properties')
+    config.read('config/config_key.properties')
     data_dir = config.get('DIR_STRUCTURE', 'guia_dir')
     directorioALMACENAMIENTO= config.get('DIR_STRUCTURE', 'storage_dir')
     api_key=config.get('DIR_STRUCTURE', 'api_key')

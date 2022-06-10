@@ -10,10 +10,10 @@ import os
 os.chdir("../../../")
 import configparser
 import pandas as pd
-from database import bd_handler
+from utils.database import bd_handler
 
 config = configparser.ConfigParser()
-config.read('config/config.properties')
+config.read('config/config_key.properties')
 pd.options.mode.chained_assignment = None
 api_token =config.get('EOD_SECTION', 'api_key')
 client = EodHistoricalData(api_token)

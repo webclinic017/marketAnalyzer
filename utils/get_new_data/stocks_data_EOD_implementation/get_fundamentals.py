@@ -9,9 +9,9 @@ from eod import  EodHistoricalData
 import configparser
 import pandas as pd
 config = configparser.ConfigParser()
-config.read('config/config.properties')
+config.read('config/config_key.properties')
 pd.options.mode.chained_assignment = None
-api_token =config.get('EOD_SECTION', 'api_key')
+api_token =config.get('EOD', 'api_key')
 
 client = EodHistoricalData(api_token)
 import pandas as pd
@@ -19,10 +19,16 @@ from functools import reduce
 from datetime import datetime, timedelta
 import warnings
 warnings.filterwarnings("ignore")
-def getFundamentals(ticker):
+import datetime as dt
+def get_fundamentals(ticker,from_date:dt.date=None,to_date:dt.date=None):
     """
     Returns the fundamental data from the financial data API.  Combines the quarterly balance 
     sheet, cash flow, income statement, and earnings for a specific stock ticker.
+    :param ticker: exchange.stock
+    :param from_date: None by default (included)
+    :param to_date: None by default (included)
+    :return:
+    :rtype: pd.DataFrame
     """
     
     resp = client.get_fundamental_equity(ticker, filter_='Financials')
@@ -35,10 +41,10 @@ def getFundamentals(ticker):
             "quarterly" in resp["Balance_Sheet"].keys() and    "quarterly" in resp['Income_Statement'].keys() :
         # Financials
             bal = pd.DataFrame(resp["Balance_Sheet"]["quarterly"]).T
-            
+            inc = pd.DataFrame(resp['Income_Statement']['quarterly']).T
             cf = pd.DataFrame(resp['Cash_Flow']['quarterly']).T
             
-            inc = pd.DataFrame(resp['Income_Statement']['quarterly']).T
+
             
         
             
@@ -52,13 +58,20 @@ def getFundamentals(ticker):
                     how='outer',
                     suffixes=('', '_drop')
                 ), 
-                [bal, cf, inc]
+                [bal, inc, cf]
             )
             
             # Dropping redundant date and duplicate columns
             dup_cols = [i for i in df.columns if "date" in i or "Date" in i or "_drop" in i]
             
             df = df.drop(dup_cols, axis=1)
+            df.index=pd.to_datetime(df.index)
+            if to_date is not None:
+               df= df.loc[df.index<=dt.datetime(to_date.year,to_date.month,to_date.day)]
+            if from_date is     not None:
+              df= df.loc[df.index >= dt.datetime(from_date.year,from_date.month,from_date.day)]
+            if "currency_symbol" in df.columns:
+                df.drop(labels="currency_symbol", inplace=True, axis=1)
             
             return df
         else:

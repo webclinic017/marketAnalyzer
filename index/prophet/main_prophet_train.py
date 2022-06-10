@@ -15,7 +15,7 @@ import random
 import numpy as np
 from utils import metricas, work_dataframes
 from datetime import timedelta
-from database import dabase_functions
+from utils.database import database_functions,bd_handler
 from functions import estacionaridadYCointegracion
 from prophet.plot import plot_cross_validation_metric
 import matplotlib.pyplot as plt
@@ -23,7 +23,8 @@ pd.set_option("display.max_columns", 500)
 pd.set_option("display.max_rows", 500)
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-
+    bd_stocks=bd_handler.bd_handler("stocks")
+    bd_market_data=bd_handler.bd_handler("market_data")
     print(os.getcwd())
     random.seed(dt.datetime.now().minute)
     config = load_config.config()
@@ -31,17 +32,17 @@ if __name__ == '__main__':
     variables_externas =  ["U.S. 3M","U.S. 7Y", "U.S. 10Y", "U.S. 30Y"]
 
     data = pd.read_csv("data/raw/energies/dayly_energy.csv", index_col=0)  # datos concretos
-    data = dabase_functions.obtener_multiples_series("index", "D", *["ibex35", "nasdaq", "sp500"])
-    data=dabase_functions.get_series_activos_diferentes_de_acciones("","gold","commodities","D","gold")
+    data = database_functions.obtener_multiples_series("index", "D", *["ibex 35", "nasdaq", "s&p 500"],bd=bd_market_data)
+    data= database_functions.get_series_activos_diferentes_de_acciones("", "gold", "commodities", "D", "gold",bd=bd_market_data)
 
     array = []
 
 
-    serie=dabase_functions.get_series_activos_diferentes_de_acciones("usa","nasdaq","index","D","nasdaq")
+    serie= database_functions.get_series_activos_diferentes_de_acciones("usa", "nasdaq", "index", "D", "nasdaq",bd=bd_market_data)
     array=[serie]
     for l in ["U.S. 3M","U.S. 7Y", "U.S. 10Y", "U.S. 30Y"]:
         try:
-            serie = dabase_functions.get_series_activos_diferentes_de_acciones("us", l, "bonds", "D", l)
+            serie = database_functions.get_series_activos_diferentes_de_acciones("us", l, "bonds", "D", l,bd=bd_market_data)
             array.append(serie)
         except Exception as e:
             print(e)
@@ -70,7 +71,7 @@ if __name__ == '__main__':
     # macro
     pais = config["prophet"]["country_usado"]
     feature_macro = config["prophet"]["feature_macro"]
-    data_macro = dabase_functions.get_multiple_macro_data(pais, shift=0)
+    data_macro = database_functions.get_multiple_macro_data(pais, shift=0,bd=bd_market_data)
     data_macro = data_macro.fillna(method="ffill")
 
     # si se usa macro para predecir

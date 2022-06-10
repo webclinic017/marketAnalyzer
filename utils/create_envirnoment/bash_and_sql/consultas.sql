@@ -71,6 +71,10 @@ delete  from bonds WHERE name not like '%10Y%'
                     and name not like '%6M%';
 -------------------------------------------------------
 --RATIO RESULTS (PROCESSED TABLES)
+
+
+
+
 select * from   ratios_results as rr  where adjusted_close is not null  and fecha>= all(select fecha from ratios_results where adjusted_close is not null and stock=rr.stock and exchange=rr.exchange)
 select stocks.name,indices.indice,ca.stock,ca.exchange, h.MarketCapitalization,ca.actual,ca.estimate,ca.report_date,ca.date, h.ebitda,peratio, bookvalue,h.QuarterlyEarningsGrowthYOY,h.QuarterlyRevenueGrowthYOY,sector from (select * from calendarioResultados where  exchange='US' and report_date>DATE_ADD(now(),interval -60 day ))  ca
     inner join indices on ca.stock=indices.company

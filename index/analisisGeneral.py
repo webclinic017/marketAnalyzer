@@ -1,13 +1,9 @@
 import os
 os.chdir("../")
-from database import dabase_functions
+from utils.database import database_functions,bd_handler
 from config import load_config
 
-from functions import macro
 from plots import plots_iniciales
-import pandas as pd
-import json
-import datetime as dt
 import logging.config
 logging.config.fileConfig("logs/logging.conf")
 logger=logging.getLogger("errores")
@@ -20,6 +16,8 @@ def get_info_indice():
 #se pretende analizar las correlaciones de los precios con diferentes variables
 # se pretende analizar el comportamiento de los precios en periodos de crecimiento y decrecimiento
 if __name__=="__main__":
+    bd_stocks=bd_handler.bd_handler("stocks")
+    bd_market_data = bd_handler.bd_handler("market_data")
     config = load_config.config()
     indices = config["macro"]["indices"]
 
@@ -31,11 +29,11 @@ if __name__=="__main__":
 
 
         for exchange in exchanges:
-            try:
-                serie= dabase_functions.get_series_activos_diferentes_de_acciones(config["macro"]["indice_country"][indice], indice, "index", "2Q", indice)
+
+                serie= database_functions.get_series_activos_diferentes_de_acciones(config["macro"]["indice_country"][indice], indice, "index", "2Q", indice,bd=bd_market_data)
                 print(indice, country, exchange,serie.tail())
                 serie=serie.pct_change(1).dropna()
-                df_stocks_names=dabase_functions.filter_by_indice(indice,exchange)
+                df_stocks_names= database_functions.filter_by_indice(indice, exchange,bd=bd_stocks)
 
 
 
@@ -43,13 +41,13 @@ if __name__=="__main__":
                 correlaciones_us_macro=[]
                 correlaciones_pais_propio_macro=[]
                 correlaciones_funadmental=[]
-                for stock in df_stocks_names.values:
-                    print(stock)
+                if  df_stocks_names is not None:
+                        for stock in df_stocks_names.values:
+                            print(stock)
 
                 plots_iniciales.plot_serie_temporal(serie,indice,indice,4)
 
-            except Exception as e:
-                logger.error(e)
+
 
 
 

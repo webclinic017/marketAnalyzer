@@ -12,9 +12,7 @@ import pandas as pd
 from config import load_config
 import datetime as dt
 import random
-from plots import plots_iniciales
-from functions import hurst
-from database import dabase_functions
+from utils.database import database_functions
 from utils import work_dataframes
 from functions import estacionaridadYCointegracion
 pd.set_option("display.max_columns", 500)
@@ -33,9 +31,11 @@ if __name__ == '__main__':
     for column in data.columns:
        print(column)
        if len(column.split("_"))>1:
-           series.append(dabase_functions.get_prize_or_fundamenal(column.split("_")[0],column.split("_")[1],"B","precios","adjusted_close",column))
+           series.append(
+               dabase_functions.get_prize_or_fundamenal(column.split("_")[0], column.split("_")[1], "B", "precios", "adjusted_close", column))
        else:
-           series.append(dabase_functions.get_series_activos_diferentes_de_acciones("oil","Crude Oil WTI","commodities","D","oil"))
+           series.append(
+               dabase_functions.get_series_activos_diferentes_de_acciones("oil", "Crude Oil WTI", "commodities", "D", "oil"))
     data=work_dataframes.merge(series)
 
 

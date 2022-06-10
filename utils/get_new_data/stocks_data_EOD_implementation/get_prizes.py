@@ -5,22 +5,30 @@ import pandas as pd
 from io import StringIO
 import datetime
 import configparser
+import datetime as dt
+from datetime import timedelta
 config = configparser.ConfigParser()
-config.read('config/config.properties')
+config.read('config/config_key.properties')
 pd.options.mode.chained_assignment = None
-api_token =config.get('EOD_SECTION', 'api_key')
+api_token =config.get('EOD', 'api_key')
 expire_after = datetime.timedelta(days=1)
 session = requests_cache.CachedSession(
     cache_name="cache", backend="sqlite", expire_after=expire_after)
-def get_eod_data(symbol="AAPL.US",date=None):
+def get_eod_prizes(ticker="AAPL.US", from_date:dt.date=None, to_date:dt.date=None):
+    """
 
-    
-
-    url = "https://eodhistoricaldata.com/api/eod/%s" % symbol
+    :param ticker:
+    :param from_date: (included)
+    :param to_date: (included)
+    :return: pd.DataFrame
+    """
+    url = "https://eodhistoricaldata.com/api/eod/%s" % ticker
     params={}
    
-    if not date is  None:
-        params["from"]=date
+    if not from_date is None:
+        params["from"]=from_date
+    if not to_date is None:
+        params["to"]=to_date
         
     params["api_token"]= api_token
     
@@ -35,7 +43,7 @@ def get_eod_data(symbol="AAPL.US",date=None):
         return df
 
     else:
-        print("Fallo al obtener %s"%symbol)
+        print("Fallo al obtener %s" % ticker)
         return None
 
 

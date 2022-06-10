@@ -1,9 +1,6 @@
 import os
 os.chdir("../")
-from database import bd_handler
 
-
-import pandas as pd
 from config import load_config
 
 config = load_config.config()
@@ -12,7 +9,7 @@ import datetime as dt
 from utils import work_dataframes
 from plots import plots_iniciales
 import pandas as pd
-from functions import macro
+
 if __name__ == "__main__":
     #analisis de los seleccionados para energias
     data = pd.read_csv("./data/raw/energies/dayly_energy.csv", index_col=0)
@@ -37,11 +34,14 @@ if __name__ == "__main__":
                 data_aux = data2.loc[data2.index > fecha]
                 resultadosEst = estacionaridadYCointegracion.analisis_estacionaridad(data_aux.loc[:,column])
                 print(data_aux.tail())
-                array = resultadosEst["hurst"]+ [resultadosEst["results_adf"][1], resultadosEst["lambda_adf"]]
+                array=[]
+                for h in resultadosEst["hurst"]:
+                    array.append(h)
+                array =array+ [resultadosEst["results_adf"]["p-value"], resultadosEst["lambda_adf"]]
                 dataframe_resultados.loc[(column, fecha), ["hurst_rs","hurst_dma","hurst_dsod","hurst_diffusion", "adf_test", "lambda"]] = array
                 print("Hurst: {}".format(str(resultadosEst["hurst"])))
                 print("Lambda adf: {}".format(resultadosEst["lambda_adf"]))
-                print("Test adf: {}".format(resultadosEst["results_adf"][1]))
+                print("Test adf: {}".format(resultadosEst["results_adf"]))
 
 
     dataframe_resultados.to_csv("reports/energies/estacionaridad_univariante" + str(dt.date.today())+".csv")
