@@ -1,12 +1,16 @@
 import datetime as dt
 import os
-os.chdir("../")
+os.chdir("../../")
 from config import load_config
 config = load_config.config()
-
 import json
-
 from utils.database import  database_functions,bd_handler
+
+dir_dicts= config["processed_data"]["base_dir"] + "dictionaries/"
+if not os.path.isdir(dir_dicts):
+    os.makedirs(dir_dicts)
+
+
 def obtener_fechas_crecimiento_decrecimiento(serie,nombre,diccionarioFechas):
     diccionarioFechas[nombre]={"mucho_crecimiento":[],"crecimiento":[],
                                    "decrecimiento":[],"mucho_decrecimiento":[]}
@@ -24,6 +28,7 @@ def obtener_fechas_crecimiento_decrecimiento(serie,nombre,diccionarioFechas):
 
 
 if __name__=="__main__":
+
     bd=bd_handler.bd_handler("market_data")
     diccionarioFechas = {}
     indices = config["macro"]["indices"]
@@ -46,5 +51,5 @@ if __name__=="__main__":
             print(e)
 
 
-    with open("data/raw/dictionaries/fechas.json","w") as file:
+    with open(dir_dicts + "fechas.json", "w") as file:
             json.dump(diccionarioFechas,file)

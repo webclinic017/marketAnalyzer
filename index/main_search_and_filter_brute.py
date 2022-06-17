@@ -2,8 +2,8 @@ import os
 os.chdir("../")
 from utils.database import  bd_handler
 from utils.database import database_functions
-from utils import work_dataframes
-from functions import estacionaridadYCointegracion
+from utils.dataframes import work_dataframes
+from functions.estacionaridad import estacionaridadYCointegracion
 import pandas as pd
 if __name__ == "__main__":
 

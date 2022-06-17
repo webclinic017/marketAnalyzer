@@ -79,7 +79,7 @@ if __name__ == "__main__":
 
                     except HTTPError as e:
                         logger.error("main_fundamentals_update: {}, ".format(exchange + "." + stock) + str(e))
-                    logger.info("main_fundamentals_update: Data downloaded to table {}".format(tabla))
+                logger.info("main_fundamentals_update: Data downloaded to table {}".format(tabla))
 
 
 

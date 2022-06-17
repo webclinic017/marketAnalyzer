@@ -37,8 +37,7 @@ if __name__ == "__main__":
     tablas=[tabla for tabla in tablas if (len(tabla.split("_")) == 2 and tabla.split("_")[1] == "fundamental")]
     
 
-    kk=0
-    ex_loss=0
+
     for tabla in tablas:
 
 

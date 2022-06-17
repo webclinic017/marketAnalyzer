@@ -1,16 +1,12 @@
 import os
 os.chdir("../../")
 import matplotlib.pyplot as plt
-import seaborn as sns
 from numpy.random import  normal
 import pandas as pd
 import math
 import numpy as np
-from sklearn.linear_model import LinearRegression
-from hurst import compute_Hc
 from statsmodels.tsa.stattools import pacf,acf
-from functions import hurst
-from statsmodels.tsa.stattools import adfuller
+from functions.estacionaridad import hurst
 from functions import stastmodels_functions
 
 def generate_ruido(media,scale):
@@ -145,7 +141,7 @@ if __name__=="__main__":
     data=pd.read_csv("data/raw/energies/dayly_energy.csv")
     arm=data.loc[:,"MI_TOT"].dropna()
 
-    print(hurst.hurst_exponent(arm,method="all",max_chunksize=100,min_chunksize=8,num_chunksize=1))
+    print(hurst.hurst_exponent(arm, method="all", max_chunksize=100, min_chunksize=8, num_chunksize=1))
     res=(stastmodels_functions.adfuller_(arma_))
     print(res)
     suma=0
@@ -153,7 +149,7 @@ if __name__=="__main__":
     if do_arma:
         for k in range(100):
             arma_ = arma(1000, 1, 0, ar_coef, am_coef)
-            a=hurst.hurst_exponent(arma_, method="all", max_chunksize=200, min_chunksize=8, num_chunksize=5)
+            a= hurst.hurst_exponent(arma_, method="all", max_chunksize=200, min_chunksize=8, num_chunksize=5)
             suma+=(len(np.where(np.array(a)>0.5)[0]))
             est,_=stastmodels_functions.adfuller_(arma_)
             if est[1]<0.1:

@@ -26,8 +26,8 @@ class HiddenPrints:
 
 
 
-fecha1 = dt.datetime.today() - timedelta(days=200)
-fecha2 = dt.date.today() + timedelta(days=30)
+fecha1 = dt.datetime.today() - timedelta(days=100)
+fecha2 = dt.date.today() + timedelta(days=200)
 from utils.get_new_data.stocks_data_EOD_implementation.get_results import get_results
 if __name__ == "__main__":
 
@@ -47,12 +47,15 @@ if __name__ == "__main__":
             logger.info("main_results: Fecha inicial del rango %s %s" % (i, fecha1))
             logger.info("main_results: Fecha final del rango %s %s" % (i, fecha2))
             resp = get_results(fecha1, fecha2)
-            dataframe = pd.DataFrame(resp["earnings"]).loc[:, [
-                                                                  "code", "report_date", "date", "actual", "estimate"]]
-            dataframe["stock"] = dataframe["code"].transform(lambda x: x.split(".")[0])
-            dataframe["exchange"] = dataframe["code"].transform(
-                lambda x: x.split(".")[1])
-            dataframe.drop("code", inplace=True, axis=1)
-            dataframe.set_index(["report_date"],drop=True,inplace=True)
-            logger.info("main_results: Número de resultados  en este rango (fecha1={}, fecha2={}): {}".format(fecha1,fecha2,len(dataframe)))
-            bd.bulk_insert(dataframe, "calendarioResultados")
+            if len(resp["earnings"])>0:
+                dataframe = pd.DataFrame(resp["earnings"]).loc[:, [
+                                                                      "code", "report_date", "date", "actual", "estimate"]]
+                dataframe["stock"] = dataframe["code"].transform(lambda x: x.split(".")[0])
+                dataframe["exchange"] = dataframe["code"].transform(
+                    lambda x: x.split(".")[1])
+                dataframe.drop("code", inplace=True, axis=1)
+                dataframe.set_index(["report_date"],drop=True,inplace=True)
+                logger.info("main_results: Número de resultados  en este rango (fecha1={}, fecha2={}): {}".format(fecha1,fecha2,len(dataframe)))
+                bd.bulk_insert(dataframe, "calendarioResultados")
+
+

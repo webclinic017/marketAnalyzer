@@ -4,15 +4,16 @@ os.chdir("../")
 from config import load_config
 
 config = load_config.config()
-from functions import estacionaridadYCointegracion
+from functions.estacionaridad import estacionaridadYCointegracion
 import datetime as dt
-from utils import work_dataframes
+from utils.dataframes import work_dataframes
 from plots import plots_iniciales
 import pandas as pd
 
 if __name__ == "__main__":
     #analisis de los seleccionados para energias
     data = pd.read_csv("./data/raw/energies/dayly_energy.csv", index_col=0)
+
 
     data.index = pd.to_datetime(data.index)
     fecha_minima = config["series_temporales"]["fecha_minima"]
@@ -32,7 +33,7 @@ if __name__ == "__main__":
         for fecha in fechas:
 
                 data_aux = data2.loc[data2.index > fecha]
-                resultadosEst = estacionaridadYCointegracion.analisis_estacionaridad(data_aux.loc[:,column])
+                resultadosEst = estacionaridadYCointegracion.analisis_estacionaridad(data_aux.loc[:, column])
                 print(data_aux.tail())
                 array=[]
                 for h in resultadosEst["hurst"]:

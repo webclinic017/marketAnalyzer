@@ -1,20 +1,14 @@
-from datetime import timedelta
-
-
 import pandas as pd
 from prophet import Prophet
 from prophet.diagnostics import cross_validation, performance_metrics
-from prophet.plot import plot_cross_validation_metric
 
 from config import load_config
 import itertools
-from utils import info
+from logs import info
+
 config=load_config.config()
 import random
-from utils import metricas
-from plots import plots_prophet
-import pickle
-import datetime as dt
+from functions import metricas
 
 
 def params_prophet(param_grid):
@@ -37,21 +31,21 @@ def params_prophet(param_grid):
 def train_and_predict(df_train, df_test, **params):
     monthly_seasonality = params["monthly_seasonality"]
     monthly_n = params["monthly_N"]
-
+    weekly_n = params["weekly_N"]
     yearly_n = params["yearly_N"]
     use_holidays = params["use_holidays"]
-    params.pop("monthly_seasonality")
-    params.pop("monthly_N")
-    params.pop("yearly_N")
-    params.pop("weekly_N")
-    params.pop("use_holidays")
+
+    for key in ["monthly_seasonality","monthly_N","yearly_N","weekly_N","use_holidays"]:
+        if key in params.keys():
+            params.pop(key)
     # Creamos un modelo prophet
-    model = Prophet(weekly_seasonality=False, yearly_seasonality=yearly_n, **params)
+    model = Prophet(weekly_seasonality=weekly_n, yearly_seasonality=yearly_n, **params)
 
     # Comprobar si se meten las variables externas
     columnas = list(set(df_train.columns) - set(("ds", "y")))
     for column in columnas:
         model.add_regressor(column)
+
     if use_holidays:
         model.add_country_holidays(country_name='US')
 
@@ -67,14 +61,13 @@ def train_and_predict(df_train, df_test, **params):
 
 
 
-    forecast = model.predict(future)
-    forecast["y"]=df_test.reset_index().y
-    smape=metricas.smape(forecast.y, forecast.yhat)
+    forecast_test = model.predict(future)
+    forecast_test["y"]=df_test.reset_index().y
     aux=pd.concat([df_train,df_test],axis=0)
     future=aux.drop("y",axis=1)
-    forecast1 =  model.predict(future)
-    forecast1["y"] =aux.reset_index().y
-    return model, forecast,forecast1,smape
+    forecast_full_dataframe =  model.predict(future)
+    forecast_full_dataframe["y"] =aux.reset_index().y
+    return model, forecast_test,forecast_full_dataframe
 
 
 

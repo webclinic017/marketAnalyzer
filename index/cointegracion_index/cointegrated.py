@@ -12,9 +12,8 @@ import pandas as pd
 from config import load_config
 import datetime as dt
 import random
-from utils.database import database_functions
-from utils import work_dataframes
-from functions import estacionaridadYCointegracion
+from utils.dataframes import work_dataframes
+from functions.estacionaridad import estacionaridadYCointegracion
 pd.set_option("display.max_columns", 500)
 pd.set_option("display.max_rows", 500)
 # Press the green button in the gutter to run the script.
@@ -36,7 +35,7 @@ if __name__ == '__main__':
        else:
            series.append(
                dabase_functions.get_series_activos_diferentes_de_acciones("oil", "Crude Oil WTI", "commodities", "D", "oil"))
-    data=work_dataframes.merge(series)
+    data= work_dataframes.merge(series)
 
 
     data.index = pd.to_datetime(data.index)

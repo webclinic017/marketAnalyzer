@@ -1,6 +1,4 @@
-
-
-from functions import hurst
+from functions.estacionaridad import hurst
 from functions import stastmodels_functions
 from plots import plots_iniciales
 from plots import other_plots
@@ -22,7 +20,7 @@ def analisis_estacionaridad(serie,tiempos=[50,4,2]):
     a=tiempos
 
 
-    exponentes1=hurst.hurst_exponent(serie,max_chunksize=a[0],min_chunksize=a[1],num_chunksize=a[2],method="all")
+    exponentes1= hurst.hurst_exponent(serie, max_chunksize=a[0], min_chunksize=a[1], num_chunksize=a[2], method="all")
 
 
     adf_result,lamda=stastmodels_functions.adfuller_(serie)

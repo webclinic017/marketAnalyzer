@@ -18,7 +18,7 @@ savedModels/
 **/artifacts
 **mlflow.db
 **comandos.sh
-**/plots
+assets/results/nasdaq/plots
 **/resultados
 **/backup.sql
 **/backup_market_data.sql

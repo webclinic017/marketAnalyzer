@@ -1,8 +1,7 @@
-import os
 #os.chdir("../../")
 from config import load_config
 from utils.database import bd_handler
-from utils import work_dataframes
+from utils.dataframes import work_dataframes
 
 config = load_config.config()
 import pandas as pd
@@ -15,15 +14,15 @@ def filter_by_description(*palabras_clave,bd):
     valores = ["%" + e + "%" for e in palabras_clave]
 
     consulta = "select exchange,stock,description from descriptions where" + cadena_claves
-    return bd.execute_query_dataframe(consulta, valores)
+    data= bd.execute_query_dataframe(consulta, valores)
+    data["accion"] = data["exchange"] + "_" + data["stock"]
+    return data
 
 
 def filter_by_broker(broker,bd):
 
     consulta = "select code as stock,exchange,concat(exchange,'_',code) as accion from {}".format(broker)
     data = bd.execute_query_dataframe(consulta, None)
-    data["exchange"] = data["exchange"].transform(lambda x: "US" if x in ["NASDAQ", "NYSE"] else x)
-    data["accion"] = data["exchange"] + "_" + data["stock"]
     return data
 
 
@@ -31,7 +30,8 @@ def filter_by_sector(sector,bd):
 
     consulta = "select stock,exchange,concat(exchange,'_',stock) as accion,sector  from " \
                "sectors where sector like %s"
-    return bd.execute_query_dataframe(consulta, (sector,))
+    data=bd.execute_query_dataframe(consulta, (sector,))
+    return  data
 
 
 def filter_by_indice(indice, exchange,bd):
@@ -39,7 +39,8 @@ def filter_by_indice(indice, exchange,bd):
 
     consulta = "select code as stock,exchange,concat(exchange,'_',code) as accion  from " \
                    "stocks inner join indices on stocks.code=indices.company where stocks.exchange=%s and indices.indice=%s"
-    return bd.execute_query_dataframe(consulta, (exchange, indice))
+    data= bd.execute_query_dataframe(consulta, (exchange, indice))
+    return data
 
 
 
@@ -220,7 +221,7 @@ def obtener_multiples_series(tipo, freq, *array,bd=None):
             exchange = nombre.split("_")[0]
             stock = nombre.split("_")[1]
             serie = get_prize_or_fundamenal(exchange, stock, freq=freq, type="precios", columna="adjusted_close",
-                                            col_name=stock,bd=bd)
+                                            col_name=exchange+"_"+stock,bd=bd)
             series.append(serie)
 
 
@@ -231,7 +232,7 @@ def obtener_multiples_series(tipo, freq, *array,bd=None):
         serie = get_fundamental_multiples_columns(exchange, stock, freq=freq, columnas=array[1:],bd=bd)
         series.append(serie)
         serie = get_prize_or_fundamenal(exchange, stock, freq=freq, type="precios", columna="adjusted_close",
-                                        col_name=stock,bd=bd)
+                                        col_name=exchange+"_"+stock,bd=bd)
         series.append(serie)
 
     data = work_dataframes.merge(series)
@@ -256,10 +257,10 @@ def obtener_fundamenal_varios_stocks_multiples_columns(freq, array1=None, array2
             exchange = stock.split("_")[0]
             stock = stock.split("_")[1]
             serie = get_fundamental_multiples_columns(exchange, stock, freq=freq, columnas=array2,bd=bd)
-            serie.columns = [stock + "_" + e for e in serie.columns]
+            serie.columns = [exchange+ "_"+stock+ "_" + e for e in serie.columns]
             series.append(serie)
             serie = get_prize_or_fundamenal(exchange, stock, freq=freq, type="precios", columna="adjusted_close",
-                                            col_name=stock,bd=bd)
+                                            col_name=exchange+"_"+stock,bd=bd)
 
             series.append(serie)
     elif diccionario is not None:
@@ -267,9 +268,10 @@ def obtener_fundamenal_varios_stocks_multiples_columns(freq, array1=None, array2
             exchange = stock.split("_")[0]
             stock = stock.split("_")[1]
             serie = get_fundamental_multiples_columns(exchange, stock, freq=freq, columnas=columnas,bd=bd)
+            serie.columns = [exchange + "_" + stock + "_" + e for e in serie.columns]
             series.append(serie)
             serie = get_prize_or_fundamenal(exchange, stock, freq=freq, type="precios", columna="adjusted_close",
-                                            col_name=stock,bd=bd)
+                                            col_name=exchange+"_"+stock,bd=bd)
             series.append(serie)
 
     data = work_dataframes.merge(series)
@@ -293,13 +295,14 @@ def obtener_fundamenal_varios_stocks_multiples_columns_with_report_dates(freq, a
             exchange = stock.split("_")[0]
             stock = stock.split("_")[1]
             serie = get_fundamental_multiples_columns_report_dates(exchange, stock, freq=freq, columnas=array2,bd=bd)
-            serie.columns = [stock + "_" + e for e in serie.columns]
+            serie.columns = [exchange+"_"+stock + "_" + e for e in serie.columns]
             series.append(serie)
     elif diccionario is not None:
         for stock, columnas in diccionario.items():
             exchange = stock.split("_")[0]
             stock = stock.split("_")[1]
             serie = get_fundamental_multiples_columns_report_dates(exchange, stock, freq=freq, columnas=columnas,bd=bd)
+            serie.columns = [exchange + "_" + stock + "_" + e for e in serie.columns]
             series.append(serie)
 
     data = work_dataframes.merge(series)

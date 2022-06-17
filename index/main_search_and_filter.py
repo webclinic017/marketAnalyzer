@@ -2,8 +2,8 @@ import os
 os.chdir("../")
 from utils.database import  bd_handler
 from utils.database import database_functions
-from utils import work_dataframes
-from functions import estacionaridadYCointegracion
+from utils.dataframes import work_dataframes
+from functions.estacionaridad import estacionaridadYCointegracion
 if __name__ == "__main__":
 
     bd= bd_handler.bd_handler("stocks")
@@ -20,7 +20,7 @@ if __name__ == "__main__":
             array_dataframes.append(data)
             print(data.tail())
             print(e[0]+"_"+e[1])
-            resultadosEst = estacionaridadYCointegracion.analisis_estacionaridad(data.loc[:,e[0]+"_"+e[1]].dropna())
+            resultadosEst = estacionaridadYCointegracion.analisis_estacionaridad(data.loc[:, e[0] + "_" + e[1]].dropna())
             print(resultadosEst)
             #print(data)
             data1 = database_functions.get_prize_or_fundamenal(e[0], e[1], type="fundamental", freq="Q", columna="netincome,totalrevenue",bd=  bd)
@@ -29,7 +29,7 @@ if __name__ == "__main__":
         except Exception as e:
             print(e)
 
-    data=work_dataframes.merge(array_dataframes)
+    data= work_dataframes.merge(array_dataframes)
     print(data.tail())
 
 

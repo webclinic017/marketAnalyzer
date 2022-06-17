@@ -6,6 +6,10 @@ from io import StringIO
 import datetime
 import configparser
 import datetime as dt
+import logging, logging.config
+from logging import getLogger
+logging.config.fileConfig('logs/logging.conf')
+logger = logging.getLogger('getting_data')
 from datetime import timedelta
 config = configparser.ConfigParser()
 config.read('config/config_key.properties')
@@ -43,7 +47,7 @@ def get_eod_prizes(ticker="AAPL.US", from_date:dt.date=None, to_date:dt.date=Non
         return df
 
     else:
-        print("Fallo al obtener %s" % ticker)
+        logger.error("get_prizes: Failed downloading data for symbol {}".format(ticker))
         return None
 
 
